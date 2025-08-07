@@ -10,53 +10,56 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.awt.*;
 public class tetris extends Application {
 
+    // Game board settings
     private static final int TILE = 30, WIDTH = 10, HEIGHT = 20;
+
     private final int[][][] SHAPES = {
-            // L-block
-            {
-                    {1, 0},
-                    {1, 0},
-                    {1, 1}
-            },
-            // T-block
-            {
-                    {0, 1, 0},
-                    {1, 1, 1}
-            },
-            // O-block
-            {
-                    {1,1},
-                    {1,1}
-            },
-            // I-block
-            {
-                    {1,1,1,1}
-            },
-            // 2-block
-            {
-                    {1,1,0},
-                    {0,1,1}
-            }
-
-
+        { // L-block
+            {1, 0},
+            {1, 0},
+            {1, 1}
+        },
+        { // T-block
+            {0, 1, 0},
+            {1, 1, 1}
+        },
+        { // O-block
+            {1, 1},
+            {1, 1}
+        },
+        { // I-block
+            {1, 1, 1, 1}
+        },
+        { // S/Z-block
+            {1, 1, 0},
+            {0, 1, 1}
+        }
     };
+
+    // Block colors for each shape
     private final Color[] SHAPE_COLORS = {
-            Color.BLUE,
-            Color.GREEN,
-            Color.YELLOW,
-            Color.CYAN,
-            Color.ORANGE
+        Color.BLUE,
+        Color.GREEN,
+        Color.YELLOW,
+        Color.CYAN,
+        Color.ORANGE
     };
 
+    // Game state
+    private boolean isGameOver = false;
 
+    // The game field/grid and its color mapping
     private int[][] field = new int[HEIGHT][WIDTH];
     private Color[][] fieldColor = new Color[HEIGHT][WIDTH];
+
+    // Current active block
     private int[][] currentBlock;
     private int blockX = 3, blockY = 0;
     private int shapeType;
+
+    // JavaFX animation timer for auto-drop
     private Timeline timeline;
 
     public static void main(String[] args) {
@@ -65,11 +68,13 @@ public class tetris extends Application {
 
     @Override
     public void start(Stage stage) {
+        // Set up canvas and rendering context
         Canvas canvas = new Canvas(WIDTH * TILE, HEIGHT * TILE);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         Pane root = new Pane(canvas);
         Scene scene = new Scene(root);
 
+        // Start spawning block
         spawnBlock();
         draw(gc);
 
@@ -81,6 +86,7 @@ public class tetris extends Application {
         timeline.play();
 
         scene.setOnKeyPressed(e -> {
+            if (isGameOver) return; // Ignore input if game is over
             if (e.getCode() == KeyCode.LEFT) moveBlock(-1, 0);
             else if (e.getCode() == KeyCode.RIGHT) moveBlock(1, 0);
             else if (e.getCode() == KeyCode.DOWN) moveBlock(0, 1);
@@ -88,25 +94,35 @@ public class tetris extends Application {
             draw(gc);
         });
 
+        // Setup window
         stage.setTitle("Tetris");
         stage.setScene(scene);
         stage.show();
     }
 
+    // Randomly choose and spawn a new block at the top of the screen
     private void spawnBlock() {
         shapeType = (int) (Math.random() * SHAPES.length);
         currentBlock = SHAPES[shapeType];
-        blockX = 3;
+        blockX = (WIDTH - currentBlock[0].length) / 2;
         blockY = 0;
 
+        // If new block overlaps existing blocks, end the game
+        if (!canMove(0, 0, currentBlock)) {
+            isGameOver = true;
+            timeline.stop(); // Stop falling animation
+        }
     }
 
+    // Move the block by dx and dy if the space is valid
     private void moveBlock(int dx, int dy) {
+        if (isGameOver) return;
+
         if (canMove(dx, dy, currentBlock)) {
             blockX += dx;
             blockY += dy;
         } else if (dy == 1) {
-            // Merge into field
+            // Block has landed → merge into field
             for (int i = 0; i < currentBlock.length; i++) {
                 for (int j = 0; j < currentBlock[i].length; j++) {
                     if (currentBlock[i][j] == 1) {
@@ -115,42 +131,52 @@ public class tetris extends Application {
                     }
                 }
             }
+            // Try to spawn a new block
             spawnBlock();
         }
     }
 
+    // Check if the block can move to the given offset
     private boolean canMove(int dx, int dy, int[][] shape) {
         for (int i = 0; i < shape.length; i++) {
             for (int j = 0; j < shape[i].length; j++) {
                 if (shape[i][j] == 1) {
                     int newX = blockX + j + dx;
                     int newY = blockY + i + dy;
-                    if (newX < 0 || newX >= WIDTH || newY >= HEIGHT || (newY >= 0 && field[newY][newX] == 1))
+
+                    // Out of bounds or hits filled block
+                    if (newX < 0 || newX >= WIDTH || newY >= HEIGHT || (newY >= 0 && field[newY][newX] == 1)) {
                         return false;
+                    }
                 }
             }
         }
         return true;
     }
 
+    // Rotate the block clockwise
     private void rotateBlock() {
         int rows = currentBlock.length;
         int cols = currentBlock[0].length;
         int[][] rotated = new int[cols][rows];
 
+        // Transpose + reverse each row = rotate right
         for (int i = 0; i < rows; i++)
             for (int j = 0; j < cols; j++)
                 rotated[j][rows - 1 - i] = currentBlock[i][j];
 
+        // Only apply rotation if space is valid
         if (canMove(0, 0, rotated))
             currentBlock = rotated;
     }
 
+    // Draw the game field and current block
     private void draw(GraphicsContext gc) {
+        // Clear the canvas
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, WIDTH * TILE, HEIGHT * TILE);
 
-        // Draw current block
+        // Draw current falling block
         gc.setFill(SHAPE_COLORS[shapeType]);
         for (int i = 0; i < currentBlock.length; i++) {
             for (int j = 0; j < currentBlock[i].length; j++) {
@@ -160,7 +186,7 @@ public class tetris extends Application {
             }
         }
 
-        // Draw field
+        // Draw blocks already merged in the field
         for (int i = 0; i < HEIGHT; i++) {
             for (int j = 0; j < WIDTH; j++) {
                 if (field[i][j] == 1) {
@@ -170,5 +196,11 @@ public class tetris extends Application {
             }
         }
 
+        // If the game is over, show "GAME OVER" message
+        if (isGameOver) {
+            gc.setFill(Color.WHITE);
+            gc.setFont(new javafx.scene.text.Font(30));
+            gc.fillText("GAME OVER", WIDTH * TILE / 2 - 90, HEIGHT * TILE / 2);
+        }
     }
 }
