@@ -4,11 +4,10 @@ import javafx.application.Application;
 import javafx.animation.AnimationTimer;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.input.KeyCode;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -20,7 +19,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.concurrent.Task;
-import java.awt.*;
+
 import javafx.geometry.Pos;
 
 public class Main extends Application {
@@ -35,8 +34,6 @@ public class Main extends Application {
     private final double fieldWidth = 500;
     private final double fieldHeight = 400;
 
-
-
     @Override
     public void start(Stage primaryStage) {
         root = new StackPane();
@@ -48,6 +45,56 @@ public class Main extends Application {
         primaryStage.setTitle("JavaFX Multi-Screen Game");
         primaryStage.show();
 
+        Stage splashStage = new Stage(StageStyle.UNDECORATED);
+
+        ImageView splashImage = new ImageView(new Image(getClass().getResource("/tetris.png").toExternalForm()));
+        splashImage.setFitWidth(600);   // Set desired width
+        splashImage.setFitHeight(500);  // Set desired height
+        splashImage.setPreserveRatio(true); // Maintain aspect ratio
+        splashImage.setSmooth(true);        // Optional: smooth scaling
+
+        Label groupID = new Label("Group 4");
+        Label courseCode = new Label("7010ICT");
+        Label loadingLabel = new Label("Loading, please wait...");
+
+        String boldStyle = "-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: white;";
+        groupID.setStyle(boldStyle);
+        courseCode.setStyle(boldStyle);
+        loadingLabel.setStyle(boldStyle);
+
+        StackPane.setAlignment(groupID, Pos.TOP_CENTER);
+        StackPane.setMargin(groupID, new Insets(20, 0, 0, 0));
+
+        StackPane.setAlignment(courseCode, Pos.CENTER); // default
+
+        StackPane.setAlignment(loadingLabel, Pos.BOTTOM_CENTER);
+        StackPane.setMargin(loadingLabel, new Insets(0, 0, 20, 0));
+
+
+        StackPane splashLayout = new StackPane(splashImage,groupID,courseCode,loadingLabel);
+        Scene splashScene = new Scene(splashLayout, 500, 400);  // Adjust size as needed
+
+        splashStage.setScene(splashScene);
+        splashStage.show();
+
+        Task<Void> loadTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Simulate some work (e.g., 3 seconds)
+                Thread.sleep(3000);
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    splashStage.close();
+                    showMainScreen();
+                });
+            }
+        };
+
+        new Thread(loadTask).start();
     }
     private void showMainScreen()
     {
@@ -55,16 +102,67 @@ public class Main extends Application {
         mainScreen.setPadding(new Insets(20));
 
         Label label = new Label("Main Screen");
-        Button startButton = new Button("Start Game");
+        Button startButton = new Button("Play");
         Button configButton = new Button("Configuration");
+        Button scoreButton = new Button("High Scores");
         Button exitButton = new Button("Exit");
 
         startButton.setOnAction(e -> showGameScreen());
         configButton.setOnAction(e -> showConfigScreen());
-        exitButton.setOnAction(e ->System.exit(0));
+        scoreButton.setOnAction(e -> showScoreScreen());
+        exitButton.setOnAction(e ->showExitConfirmation());
 
-        mainScreen.getChildren().addAll(label,startButton,configButton,exitButton);
+        mainScreen.getChildren().addAll(label,startButton,configButton,scoreButton,exitButton);
         root.getChildren().setAll(mainScreen);
+    }
+    private void showScoreScreen()
+    {
+        VBox scoreScreen = new VBox(20);
+        scoreScreen.setPadding(new Insets(30));
+        //HIGH SCORE Heading
+        Label title = new Label("High Scores");
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        HBox titleBox = new HBox(title);
+        titleBox.setAlignment(Pos.TOP_CENTER);
+
+        Label nameHeader = new Label("Name");
+        nameHeader.setMinWidth(200);
+        Label scoreHeader = new Label("Score");
+        scoreHeader.setMinWidth(200);
+
+        nameHeader.setStyle("-fx-font-weight: bold");
+        scoreHeader.setStyle("-fx-font-weight: bold");
+
+        HBox header = new HBox(50);
+        header.getChildren().addAll(nameHeader,scoreHeader);
+
+        String[][] data = {
+                {"Anand", "969313"},
+                {"Antony", "755659"},
+                {"Yeongjoo", "642871"},
+                {"Josh", "540820"},
+                {"Siddharth", "537728"}
+        };
+
+        VBox scoreList = new VBox(8);
+        for(String[] entry: data)
+        {
+            Label name = new Label(entry[0]);
+            name.setMinWidth(200);
+            Label score = new Label(entry[1]);
+            score.setMinWidth(200);
+
+            HBox row = new HBox(50);
+            row.getChildren().addAll(name, score);
+            scoreList.getChildren().add(row);
+        }
+
+        Button back = new Button("Back");
+        back.setOnAction(e->showMainScreen());
+
+        scoreScreen.getChildren().addAll(titleBox,header,scoreList,back);
+        root.getChildren().setAll(scoreScreen);
+
     }
     private void showConfigScreen()
     {
@@ -208,9 +306,6 @@ public class Main extends Application {
         });
         exModeBox.getChildren().addAll(extend,exBox,currentExtendStatus); //Horizontal box to include the extend Mode elements
 
-
-
-
         Button back = new Button("Back");
         back.setOnAction(e->showMainScreen());
 
@@ -252,7 +347,6 @@ public class Main extends Application {
             } else if (e.getCode() == KeyCode.RIGHT) {
                 dx = 3;
                 dy = 0;
-
             }
         });
 
@@ -279,6 +373,23 @@ public class Main extends Application {
         root.getChildren().setAll(gamePane);
         gamePane.requestFocus();
 
+    }
+    private void showExitConfirmation() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Exit Confirmation");
+        alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to exit?");
+
+        ButtonType no  = new ButtonType("No", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType yes = new ButtonType("Yes", ButtonBar.ButtonData.OK_DONE);
+        alert.getButtonTypes().setAll(no, yes);
+
+        alert.showAndWait().ifPresent(result -> {
+            if (result == yes) {
+                Platform.exit();
+            }
+            // If No -> do nothing, stay on current screen
+        });
     }
     public static void main(String[] args) {
         launch(args);
