@@ -49,6 +49,7 @@ public class tetris extends Application {
 
     // Game state
     private boolean isGameOver = false;
+    private boolean isPaused = false;
 
     // The game field/grid and its color mapping
     private int[][] field = new int[HEIGHT][WIDTH];
@@ -87,11 +88,28 @@ public class tetris extends Application {
 
         scene.setOnKeyPressed(e -> {
             if (isGameOver) return; // Ignore input if game is over
-            if (e.getCode() == KeyCode.LEFT) moveBlock(-1, 0);
-            else if (e.getCode() == KeyCode.RIGHT) moveBlock(1, 0);
-            else if (e.getCode() == KeyCode.DOWN) moveBlock(0, 1);
-            else if (e.getCode() == KeyCode.UP) rotateBlock();
-            draw(gc);
+
+            if (e.getCode() == KeyCode.P){
+
+                if (isPaused){
+                    timeline.play();
+                    isPaused = false;
+                }
+                else {
+                    timeline.stop();
+                    isPaused = true;
+                }
+                draw(gc);
+
+            }
+
+            if (!isPaused) {
+                if (e.getCode() == KeyCode.LEFT) moveBlock(-1, 0);
+                else if (e.getCode() == KeyCode.RIGHT) moveBlock(1, 0);
+                else if (e.getCode() == KeyCode.DOWN) moveBlock(0, 1);
+                else if (e.getCode() == KeyCode.UP) rotateBlock();
+                draw(gc);
+            }
         });
 
         // Setup window
@@ -201,6 +219,13 @@ public class tetris extends Application {
             gc.setFill(Color.WHITE);
             gc.setFont(new javafx.scene.text.Font(30));
             gc.fillText("GAME OVER", WIDTH * TILE / 2 - 90, HEIGHT * TILE / 2);
+        }
+
+        if (isPaused) {
+            gc.setFill(Color.WHITE);
+            gc.setFont(new javafx.scene.text.Font(28));
+            gc.fillText("Game is Paused!", WIDTH * TILE / 2 - 80, HEIGHT * TILE / 2);
+            gc.fillText("Press P to Continue.", WIDTH * TILE / 2 - 100, HEIGHT * TILE / 2 + 40);
         }
     }
 }
