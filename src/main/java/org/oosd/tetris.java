@@ -218,8 +218,8 @@ public class tetris extends Application {
         if (isPaused && !isGameOver) {
             gc.setFill(Color.WHITE);
             gc.setFont(new javafx.scene.text.Font(28));
-            gc.fillText("Game is Paused!", WIDTH * TILE / 2 - 80, HEIGHT * TILE / 2);
-            gc.fillText("Press P to Continue.", WIDTH * TILE / 2 - 100, HEIGHT * TILE / 2 + 40);
+            gc.fillText("Game is Paused!", WIDTH * TILE / 2 - 100, HEIGHT * TILE / 2);
+            gc.fillText("Press P to Continue.", WIDTH * TILE / 2 - 120, HEIGHT * TILE / 2 + 40);
         }
     }
     // Pause or resume the game timeline
