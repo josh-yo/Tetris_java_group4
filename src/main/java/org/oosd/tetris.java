@@ -88,7 +88,7 @@ public class tetris extends Application {
 
         scene.setOnKeyPressed(e -> {
 
-            // Toggle pause when the 'P' key is pressed
+            // Pause or resume game when the 'P' key is pressed
             if (e.getCode() == KeyCode.P){
                  isPaused = !isPaused;
                  updateTimeline();
@@ -222,7 +222,7 @@ public class tetris extends Application {
             gc.fillText("Press P to Continue.", WIDTH * TILE / 2 - 100, HEIGHT * TILE / 2 + 40);
         }
     }
-    // Method to start or stop the game timeline depending on pause state
+    // Pause or resume the game timeline
     private void updateTimeline() {
         if(isPaused){
             timeline.stop();
