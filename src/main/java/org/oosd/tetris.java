@@ -87,29 +87,23 @@ public class tetris extends Application {
         timeline.play();
 
         scene.setOnKeyPressed(e -> {
-            if (isGameOver) return; // Ignore input if game is over
 
+            // Toggle pause when the 'P' key is pressed
             if (e.getCode() == KeyCode.P){
-
-                if (isPaused){
-                    timeline.play();
-                    isPaused = false;
+                 isPaused = !isPaused;
+                 updateTimeline();
+                 draw(gc);
                 }
-                else {
-                    timeline.stop();
-                    isPaused = true;
-                }
-                draw(gc);
 
-            }
+            if (isGameOver || isPaused ) return; // Ignore input if game is over or paused
 
-            if (!isPaused) {
-                if (e.getCode() == KeyCode.LEFT) moveBlock(-1, 0);
+            // Handle block movement and rotation based on arrow keys
+            if (e.getCode() == KeyCode.LEFT) moveBlock(-1, 0);
                 else if (e.getCode() == KeyCode.RIGHT) moveBlock(1, 0);
                 else if (e.getCode() == KeyCode.DOWN) moveBlock(0, 1);
                 else if (e.getCode() == KeyCode.UP) rotateBlock();
                 draw(gc);
-            }
+
         });
 
         // Setup window
@@ -220,12 +214,21 @@ public class tetris extends Application {
             gc.setFont(new javafx.scene.text.Font(30));
             gc.fillText("GAME OVER", WIDTH * TILE / 2 - 90, HEIGHT * TILE / 2);
         }
-
-        if (isPaused) {
+        // If the game is currently paused and not over, show "Game is Paused!"
+        if (isPaused && !isGameOver) {
             gc.setFill(Color.WHITE);
             gc.setFont(new javafx.scene.text.Font(28));
             gc.fillText("Game is Paused!", WIDTH * TILE / 2 - 80, HEIGHT * TILE / 2);
             gc.fillText("Press P to Continue.", WIDTH * TILE / 2 - 100, HEIGHT * TILE / 2 + 40);
+        }
+    }
+    // Method to start or stop the game timeline depending on pause state
+    private void updateTimeline() {
+        if(isPaused){
+            timeline.stop();
+        }
+        else {
+            timeline.play();
         }
     }
 }
