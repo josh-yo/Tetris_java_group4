@@ -50,6 +50,7 @@ public class tetris extends Application {
     // Game state
     private boolean isGameOver = false;
     private boolean isPaused = false;
+    private boolean isFull = true;
 
     // The game field/grid and its color mapping
     private int[][] field = new int[HEIGHT][WIDTH];
@@ -106,6 +107,7 @@ public class tetris extends Application {
 
         });
 
+
         // Setup window
         stage.setTitle("Tetris");
         stage.setScene(scene);
@@ -144,6 +146,7 @@ public class tetris extends Application {
                 }
             }
             // Try to spawn a new block
+            eraseRow();
             spawnBlock();
         }
     }
@@ -229,6 +232,38 @@ public class tetris extends Application {
         }
         else {
             timeline.play();
+        }
+    }
+
+    // Erase the Row when it's Full
+    private void eraseRow() {
+        for (int i = 0; i < HEIGHT;i++) {
+            isFull = true;
+
+            // Check if row has any empty cell
+            for (int j = 0; j < WIDTH; j++) {
+                if (field[i][j] == 0) {
+                    isFull = false;
+                    break;
+                }
+            }
+            if (isFull) {
+                // Move all rows above down
+                for (int a = i; a > 0; a--) {
+                    System.arraycopy(field[a-1], 0, field[a], 0, WIDTH);
+                    System.arraycopy(fieldColor[a-1], 0, fieldColor[a], 0, WIDTH);
+
+                }
+
+                // Clear the top row
+                for (int b = 0; b < WIDTH; b++) {
+                    field[0][b] = 0;
+                    fieldColor[0][b] = null;
+                }
+
+                // Re-check same row after shift
+                i--;
+            }
         }
     }
 }
