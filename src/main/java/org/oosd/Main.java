@@ -53,25 +53,19 @@ public class Main extends Application {
         splashImage.setPreserveRatio(true); // Maintain aspect ratio
         splashImage.setSmooth(true);        // Optional: smooth scaling
 
-        Label groupID = new Label("Group 4");
-        Label courseCode = new Label("7010ICT");
+        Label courseCode = new Label("Group 4- 7010ICT");
         Label loadingLabel = new Label("Loading, please wait...");
 
-        String boldStyle = "-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: white;";
-        groupID.setStyle(boldStyle);
+        String boldStyle = "-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: red;";
         courseCode.setStyle(boldStyle);
         loadingLabel.setStyle(boldStyle);
-
-        StackPane.setAlignment(groupID, Pos.TOP_CENTER);
-        StackPane.setMargin(groupID, new Insets(20, 0, 0, 0));
 
         StackPane.setAlignment(courseCode, Pos.CENTER); // default
 
         StackPane.setAlignment(loadingLabel, Pos.BOTTOM_CENTER);
         StackPane.setMargin(loadingLabel, new Insets(0, 0, 20, 0));
 
-
-        StackPane splashLayout = new StackPane(splashImage,groupID,courseCode,loadingLabel);
+        StackPane splashLayout = new StackPane(splashImage,courseCode,loadingLabel);
         Scene splashScene = new Scene(splashLayout, 500, 400);  // Adjust size as needed
 
         splashStage.setScene(splashScene);
@@ -84,7 +78,6 @@ public class Main extends Application {
                 Thread.sleep(3000);
                 return null;
             }
-
             @Override
             protected void succeeded() {
                 Platform.runLater(() -> {
@@ -93,7 +86,6 @@ public class Main extends Application {
                 });
             }
         };
-
         new Thread(loadTask).start();
     }
     private void showMainScreen()
@@ -102,18 +94,36 @@ public class Main extends Application {
         mainScreen.setPadding(new Insets(20));
 
         Label label = new Label("Main Screen");
+        label.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
+        HBox top = new HBox(label);
+        top.setAlignment(Pos.CENTER);
+        top.setPadding(new Insets(20, 0, 10, 0));
         Button startButton = new Button("Play");
         Button configButton = new Button("Configuration");
         Button scoreButton = new Button("High Scores");
         Button exitButton = new Button("Exit");
+
+        double BTN_WIDTH = 220;   // demo-style wide buttons
+        double BTN_HEIGHT = 36;
+        for (Button b : new Button[]{startButton, configButton, scoreButton, exitButton}) {
+            b.setPrefWidth(BTN_WIDTH);
+            b.setMinHeight(BTN_HEIGHT);
+        }
 
         startButton.setOnAction(e -> showGameScreen());
         configButton.setOnAction(e -> showConfigScreen());
         scoreButton.setOnAction(e -> showScoreScreen());
         exitButton.setOnAction(e ->showExitConfirmation());
 
-        mainScreen.getChildren().addAll(label,startButton,configButton,scoreButton,exitButton);
-        root.getChildren().setAll(mainScreen);
+        VBox buttonsCol = new VBox(14,startButton,configButton, scoreButton, exitButton);
+        buttonsCol.setAlignment(Pos.CENTER);
+
+        BorderPane layout = new BorderPane();
+        layout.setTop(top);
+        layout.setCenter(buttonsCol);
+        layout.setPadding(new Insets(10));
+
+        root.getChildren().setAll(layout);
     }
     private void showScoreScreen()
     {
@@ -141,7 +151,13 @@ public class Main extends Application {
                 {"Antony", "755659"},
                 {"Yeongjoo", "642871"},
                 {"Josh", "540820"},
-                {"Siddharth", "537728"}
+                {"Siddharth", "537728"},
+                {"Bob","531328"},
+                {"Alice","499000"},
+                {"Max","485078"},
+                {"Tom","460078"},
+                {"Pearl","345678"}
+
         };
 
         VBox scoreList = new VBox(8);
@@ -170,10 +186,15 @@ public class Main extends Application {
         configScreen.setPadding(new Insets(20));
 
         Label label = new Label("Configuration");
+        HBox top = new HBox(label);
+        top.setAlignment(Pos.CENTER);
+        top.setPadding(new Insets(20, 0, 10, 0));
+        label.setStyle("-fx-font-weight: bold");
 
         //Game Width Slider
         Label widthLabel = new Label("Game Width (No of cells): ");
         widthLabel.setMinWidth(150);
+        widthLabel.setStyle("-fx-font-weight: bold");
         Slider widthSlider = new Slider(5,15,10);
         widthSlider.setPrefWidth(250);
         widthSlider.setShowTickLabels(true);
@@ -191,6 +212,7 @@ public class Main extends Application {
         //Game Height Slider
         Label heightLabel = new Label("Game Height (No of cells):");
         heightLabel.setMinWidth(150);
+        heightLabel.setStyle("-fx-font-weight: bold");
         Slider heightSlider = new Slider(15,30,20);
         heightSlider.setPrefWidth(250);
         heightSlider.setShowTickLabels(true);
@@ -208,6 +230,7 @@ public class Main extends Application {
         //Game Level Slider
         Label level = new Label("Game Level:");
         level.setMinWidth(150);
+        level.setStyle("-fx-font-weight: bold");
         Slider levelSlider = new Slider(1,10,1);
         levelSlider.setPrefWidth(250);
         levelSlider.setShowTickLabels(true);
@@ -225,6 +248,7 @@ public class Main extends Application {
         //Music Checkbox
         Label music = new Label("Music (On/Off):");
         music.setMinWidth(150);
+        music.setStyle("-fx-font-weight: bold");
         CheckBox musicBox = new CheckBox();
         musicBox.setPrefWidth(250);
         HBox mBox = new HBox(10);
@@ -246,6 +270,7 @@ public class Main extends Application {
         //Sound Effect Checkbox
         Label sound = new Label("Sound Effect (On/Off):");
         sound.setMinWidth(150);
+        sound.setStyle("-fx-font-weight: bold");
         CheckBox soundBox = new CheckBox();
         soundBox.setPrefWidth(250);
         HBox sBox = new HBox(10);
@@ -267,6 +292,7 @@ public class Main extends Application {
         //AI Play Checkbox
         Label ai = new Label("AI Play (On/Off):");
         ai.setMinWidth(150);
+        ai.setStyle("-fx-font-weight: bold");
         CheckBox aiBox = new CheckBox();
         aiBox.setPrefWidth(250);
         HBox aiPlayBox = new HBox(10);
@@ -288,6 +314,7 @@ public class Main extends Application {
         //Extend Mode Checkbox
         Label extend = new Label("Extend Mode (On/Off):");
         extend.setMinWidth(150);
+        extend.setStyle("-fx-font-weight: bold");
         CheckBox exBox = new CheckBox();
         exBox.setPrefWidth(250);
         HBox exModeBox = new HBox(10);
@@ -309,7 +336,7 @@ public class Main extends Application {
         Button back = new Button("Back");
         back.setOnAction(e->showMainScreen());
 
-        configScreen.getChildren().addAll(label,wBox,hBox,levelBox,mBox,sBox,aiPlayBox,exModeBox,back); //included all the configuration screen components in the vertical box
+        configScreen.getChildren().addAll(top,wBox,hBox,levelBox,mBox,sBox,aiPlayBox,exModeBox,back); //included all the configuration screen components in the vertical box
         root.getChildren().setAll(configScreen);
     }
     private void showGameScreen()
