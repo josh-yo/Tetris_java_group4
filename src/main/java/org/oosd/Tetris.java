@@ -1,3 +1,4 @@
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -10,7 +11,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-public class tetris extends Application {
+public class Tetris extends Application {
 
     // Game board settings
     private static final int TILE = 30, WIDTH = 10, HEIGHT = 20;
