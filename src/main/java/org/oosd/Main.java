@@ -276,7 +276,6 @@ public class Main extends Application {
         root.getChildren().setAll(configScreen);
     }
 
-    /** ONLY THIS METHOD CHANGED to embed the backend game */
     private void showGameScreen() {
         BorderPane gamePane = new BorderPane();
         gamePane.setPadding(new Insets(10));
@@ -291,14 +290,14 @@ public class Main extends Application {
         center.setStyle("-fx-background-color: #f4f4f4;");
         center.setPadding(new Insets(10));
 
-        // === Embed backend Tetris here (minimal) ===
+        // Embed backend Tetris
         Tetris game = new Tetris();
         Pane gameNode = game.createEmbedded(); // get the Pane from backend
         center.getChildren().add(gameNode);
         //StackPane.setAlignment(gameNode, Pos.CENTER);
         game.startEmbedded();
-        // ===========================================
 
+        // Back button: pauses game, asks confirmation, exits or resumes
         backButton.setOnAction(e -> {
             game.toggleGame();
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);

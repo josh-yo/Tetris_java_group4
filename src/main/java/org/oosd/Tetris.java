@@ -68,19 +68,17 @@ public class Tetris extends Application {
     // JavaFX animation timer for auto-drop
     private Timeline timeline;
 
-    // ===== Added for embedding =====
+    // Added for embedding
     private BorderPane rootPane;                 // host node to embed
     private Canvas canvas;
     private GraphicsContext gc;
-    // =================================
 
     public static void main(String[] args) {
         launch();
     }
 
-    // ===== Embedding support (minimal) =====
 
-    /** Build and return the game Pane that can be embedded in the UI */
+    //Build and return the game Pane that can be embedded in the UI
     public Pane createEmbedded() {
         if (rootPane != null) return rootPane; // already built
 
@@ -125,7 +123,7 @@ public class Tetris extends Application {
         return rootPane;
     }
 
-    /** Start the game loop when embedded */
+    // Start the game loop when embedded
     public void startEmbedded() {
         if (!isGameOver && timeline != null) {
             timeline.play();
@@ -139,7 +137,7 @@ public class Tetris extends Application {
         }
     }
 
-    // ===== Standalone mode remains working =====
+
     @Override
     public void start(Stage stage) {
         // Reuse the same embedded pane for standalone
@@ -156,7 +154,6 @@ public class Tetris extends Application {
         pane.requestFocus();
     }
 
-    // ===== Original game logic below (unchanged) =====
 
     // Randomly choose and spawn a new block at the top of the screen
     private void spawnBlock() {
@@ -279,7 +276,7 @@ public class Tetris extends Application {
             timeline.play();
         }
     }
-
+    // Toggle the game state
     public void toggleGame(){
         if (timeline.getStatus() == Animation.Status.RUNNING){
             timeline.pause();
