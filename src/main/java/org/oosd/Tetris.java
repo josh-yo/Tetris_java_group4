@@ -1,3 +1,4 @@
+package org.oosd;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -6,6 +7,8 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyCode;
+import javafx.animation.Animation;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -17,35 +20,35 @@ public class Tetris extends Application {
     private static final int TILE = 30, WIDTH = 10, HEIGHT = 20;
 
     private final int[][][] SHAPES = {
-        { // L-block
-            {1, 0},
-            {1, 0},
-            {1, 1}
-        },
-        { // T-block
-            {0, 1, 0},
-            {1, 1, 1}
-        },
-        { // O-block
-            {1, 1},
-            {1, 1}
-        },
-        { // I-block
-            {1, 1, 1, 1}
-        },
-        { // S/Z-block
-            {1, 1, 0},
-            {0, 1, 1}
-        }
+            { // L-block
+                    {1, 0},
+                    {1, 0},
+                    {1, 1}
+            },
+            { // T-block
+                    {0, 1, 0},
+                    {1, 1, 1}
+            },
+            { // O-block
+                    {1, 1},
+                    {1, 1}
+            },
+            { // I-block
+                    {1, 1, 1, 1}
+            },
+            { // S/Z-block
+                    {1, 1, 0},
+                    {0, 1, 1}
+            }
     };
 
     // Block colors for each shape
     private final Color[] SHAPE_COLORS = {
-        Color.BLUE,
-        Color.GREEN,
-        Color.YELLOW,
-        Color.CYAN,
-        Color.ORANGE
+            Color.BLUE,
+            Color.GREEN,
+            Color.YELLOW,
+            Color.CYAN,
+            Color.ORANGE
     };
 
     // Game state
@@ -54,8 +57,8 @@ public class Tetris extends Application {
     private boolean isFull = true;
 
     // The game field/grid and its color mapping
-    private int[][] field = new int[HEIGHT][WIDTH];
-    private Color[][] fieldColor = new Color[HEIGHT][WIDTH];
+    private final int[][] field = new int[HEIGHT][WIDTH];
+    private final Color[][] fieldColor = new Color[HEIGHT][WIDTH];
 
     // Current active block
     private int[][] currentBlock;
@@ -65,19 +68,51 @@ public class Tetris extends Application {
     // JavaFX animation timer for auto-drop
     private Timeline timeline;
 
+    // ===== Added for embedding =====
+    private BorderPane rootPane;                 // host node to embed
+    private Canvas canvas;
+    private GraphicsContext gc;
+    // =================================
+
     public static void main(String[] args) {
         launch();
     }
 
-    @Override
-    public void start(Stage stage) {
-        // Set up canvas and rendering context
-        Canvas canvas = new Canvas(WIDTH * TILE, HEIGHT * TILE);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        Pane root = new Pane(canvas);
-        Scene scene = new Scene(root);
+    // ===== Embedding support (minimal) =====
 
-        // Start spawning block
+    /** Build and return the game Pane that can be embedded in the UI */
+    public Pane createEmbedded() {
+        if (rootPane != null) return rootPane; // already built
+
+        // Canvas + GC
+        //rootPane = new BorderPane();
+        canvas = new Canvas(WIDTH * TILE, HEIGHT * TILE);
+        gc = canvas.getGraphicsContext2D();
+
+
+        // Host pane
+        rootPane = new BorderPane(canvas);
+        rootPane.setCenter(canvas);
+
+        // Key handling attached to the pane (so it works when embedded)
+        rootPane.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.P) { // Pause / resume
+                isPaused = !isPaused;
+                updateTimeline();
+                draw(gc);
+                return;
+            }
+            if (isGameOver || isPaused) return;
+
+            if (e.getCode() == KeyCode.LEFT) moveBlock(-1, 0);
+            else if (e.getCode() == KeyCode.RIGHT) moveBlock(1, 0);
+            else if (e.getCode() == KeyCode.DOWN) moveBlock(0, 1);
+            else if (e.getCode() == KeyCode.UP) rotateBlock();
+
+            draw(gc);
+        });
+
+        // Initial game setup
         spawnBlock();
         draw(gc);
 
@@ -86,34 +121,42 @@ public class Tetris extends Application {
             draw(gc);
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
 
-        scene.setOnKeyPressed(e -> {
+        return rootPane;
+    }
 
-            // Pause or resume game when the 'P' key is pressed
-            if (e.getCode() == KeyCode.P){
-                 isPaused = !isPaused;
-                 updateTimeline();
-                 draw(gc);
-                }
+    /** Start the game loop when embedded */
+    public void startEmbedded() {
+        if (!isGameOver && timeline != null) {
+            timeline.play();
+        }
+    }
 
-            if (isGameOver || isPaused ) return; // Ignore input if game is over or paused
+    /** Stop the game loop when leaving the screen */
+    public void stopEmbedded() {
+        if (timeline != null) {
+            timeline.stop();
+        }
+    }
 
-            // Handle block movement and rotation based on arrow keys
-            if (e.getCode() == KeyCode.LEFT) moveBlock(-1, 0);
-                else if (e.getCode() == KeyCode.RIGHT) moveBlock(1, 0);
-                else if (e.getCode() == KeyCode.DOWN) moveBlock(0, 1);
-                else if (e.getCode() == KeyCode.UP) rotateBlock();
-                draw(gc);
-
-        });
-
-
-        // Setup window
+    // ===== Standalone mode remains working =====
+    @Override
+    public void start(Stage stage) {
+        // Reuse the same embedded pane for standalone
+        Pane pane = createEmbedded(); // builds rootPane, canvas, gc, timeline
+        Scene scene = new Scene(new Pane(pane));
         stage.setTitle("Tetris");
         stage.setScene(scene);
         stage.show();
+
+        // Start timeline
+        startEmbedded();
+
+        // Focus so keys work
+        pane.requestFocus();
     }
+
+    // ===== Original game logic below (unchanged) =====
 
     // Randomly choose and spawn a new block at the top of the screen
     private void spawnBlock() {
@@ -125,7 +168,7 @@ public class Tetris extends Application {
         // If new block overlaps existing blocks, end the game
         if (!canMove(0, 0, currentBlock)) {
             isGameOver = true;
-            timeline.stop(); // Stop falling animation
+            if (timeline != null) timeline.stop(); // Stop falling animation
         }
     }
 
@@ -221,15 +264,25 @@ public class Tetris extends Application {
         // If the game is currently paused and not over, show "Game is Paused!"
         if (isPaused && !isGameOver) {
             gc.setFill(Color.WHITE);
-            gc.setFont(new javafx.scene.text.Font(28));
-            gc.fillText("Game is Paused!", WIDTH * TILE / 2 - 80, HEIGHT * TILE / 2);
+            gc.setFont(new javafx.scene.text.Font(26));
+            gc.fillText("Game is Paused!", WIDTH * TILE / 2 - 90, HEIGHT * TILE / 2);
             gc.fillText("Press P to Continue.", WIDTH * TILE / 2 - 100, HEIGHT * TILE / 2 + 40);
         }
     }
+
     // Pause or resume the game timeline
     private void updateTimeline() {
-        if(isPaused){
-            timeline.stop();
+        if (timeline == null) return;
+        if (isPaused) {
+            timeline.pause();
+        } else {
+            timeline.play();
+        }
+    }
+
+    public void toggleGame(){
+        if (timeline.getStatus() == Animation.Status.RUNNING){
+            timeline.pause();
         }
         else {
             timeline.play();
@@ -238,7 +291,7 @@ public class Tetris extends Application {
 
     // Erase the Row when it's Full
     private void eraseRow() {
-        for (int i = 0; i < HEIGHT;i++) {
+        for (int i = 0; i < HEIGHT; i++) {
             isFull = true;
 
             // Check if row has any empty cell
@@ -251,9 +304,8 @@ public class Tetris extends Application {
             if (isFull) {
                 // Move all rows above down
                 for (int a = i; a > 0; a--) {
-                    System.arraycopy(field[a-1], 0, field[a], 0, WIDTH);
-                    System.arraycopy(fieldColor[a-1], 0, fieldColor[a], 0, WIDTH);
-
+                    System.arraycopy(field[a - 1], 0, field[a], 0, WIDTH);
+                    System.arraycopy(fieldColor[a - 1], 0, fieldColor[a], 0, WIDTH);
                 }
 
                 // Clear the top row
