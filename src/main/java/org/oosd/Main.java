@@ -32,7 +32,7 @@ public class Main extends Application {
     private double dy = 3;
 
     private final double fieldWidth = 500;
-    private final double fieldHeight = 400;
+    private final double fieldHeight = 600;
 
     @Override
     public void start(Stage primaryStage) {
@@ -48,25 +48,25 @@ public class Main extends Application {
         Stage splashStage = new Stage(StageStyle.UNDECORATED);
 
         ImageView splashImage = new ImageView(new Image(getClass().getResource("/tetris.png").toExternalForm()));
-        splashImage.setFitWidth(600);   // Set desired width
-        splashImage.setFitHeight(500);  // Set desired height
+        splashImage.setFitWidth(500);   // Set desired width
+        splashImage.setFitHeight(600);  // Set desired height
         splashImage.setPreserveRatio(true); // Maintain aspect ratio
         splashImage.setSmooth(true);        // Optional: smooth scaling
 
-        Label courseCode = new Label("Group 4- 7010ICT");
+        Label courseCode = new Label("Group 4 - 7010ICT");
         Label loadingLabel = new Label("Loading, please wait...");
 
         String boldStyle = "-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: red;";
         courseCode.setStyle(boldStyle);
         loadingLabel.setStyle(boldStyle);
 
-        StackPane.setAlignment(courseCode, Pos.CENTER); // default
+        StackPane.setAlignment(courseCode,Pos.CENTER);
 
         StackPane.setAlignment(loadingLabel, Pos.BOTTOM_CENTER);
         StackPane.setMargin(loadingLabel, new Insets(0, 0, 20, 0));
 
         StackPane splashLayout = new StackPane(splashImage,courseCode,loadingLabel);
-        Scene splashScene = new Scene(splashLayout, 500, 400);  // Adjust size as needed
+        Scene splashScene = new Scene(splashLayout, 500, 600);  // Adjust size as needed
 
         splashStage.setScene(splashScene);
         splashStage.show();
@@ -90,7 +90,7 @@ public class Main extends Application {
     }
     private void showMainScreen()
     {
-        VBox mainScreen = new VBox(10);
+        VBox mainScreen = new VBox(20);
         mainScreen.setPadding(new Insets(20));
 
         Label label = new Label("Main Screen");
@@ -115,7 +115,7 @@ public class Main extends Application {
         scoreButton.setOnAction(e -> showScoreScreen());
         exitButton.setOnAction(e ->showExitConfirmation());
 
-        VBox buttonsCol = new VBox(14,startButton,configButton, scoreButton, exitButton);
+        VBox buttonsCol = new VBox(40,startButton,configButton, scoreButton, exitButton);
         buttonsCol.setAlignment(Pos.CENTER);
 
         BorderPane layout = new BorderPane();
@@ -160,7 +160,7 @@ public class Main extends Application {
 
         };
 
-        VBox scoreList = new VBox(8);
+        VBox scoreList = new VBox(12);
         for(String[] entry: data)
         {
             Label name = new Label(entry[0]);
@@ -182,7 +182,7 @@ public class Main extends Application {
     }
     private void showConfigScreen()
     {
-        VBox configScreen = new VBox(10);
+        VBox configScreen = new VBox(25);
         configScreen.setPadding(new Insets(20));
 
         Label label = new Label("Configuration");
