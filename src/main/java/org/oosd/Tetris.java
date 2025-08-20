@@ -115,8 +115,10 @@ public class Tetris extends Application {
         draw(gc);
 
         timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> {
-            moveBlock(0, 1);
-            draw(gc);
+            if (!isGameOver) {
+                moveBlock(0, 1);
+                draw(gc);
+            }
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
 
@@ -157,6 +159,8 @@ public class Tetris extends Application {
 
     // Randomly choose and spawn a new block at the top of the screen
     private void spawnBlock() {
+        if (isGameOver) return;
+        
         shapeType = (int) (Math.random() * SHAPES.length);
         currentBlock = SHAPES[shapeType];
         blockX = (WIDTH - currentBlock[0].length) / 2;
@@ -165,7 +169,7 @@ public class Tetris extends Application {
         // If new block overlaps existing blocks, end the game
         if (!canMove(0, 0, currentBlock)) {
             isGameOver = true;
-            if (timeline != null) timeline.stop(); // Stop falling animation
+            if (timeline != null) timeline.stop();
         }
     }
 
@@ -186,7 +190,12 @@ public class Tetris extends Application {
                     }
                 }
             }
-            // Try to spawn a new block
+            
+            // Check if game is over before spawning new block
+            if (isGameOver) {
+                return;
+            }
+            
             eraseRow();
             spawnBlock();
         }
@@ -232,12 +241,14 @@ public class Tetris extends Application {
         gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, WIDTH * TILE, HEIGHT * TILE);
 
-        // Draw current falling block
-        gc.setFill(SHAPE_COLORS[shapeType]);
-        for (int i = 0; i < currentBlock.length; i++) {
-            for (int j = 0; j < currentBlock[i].length; j++) {
-                if (currentBlock[i][j] == 1) {
-                    gc.fillRect((blockX + j) * TILE, (blockY + i) * TILE, TILE - 1, TILE - 1);
+        // Draw current falling block only if game is not over
+        if (!isGameOver) {
+            gc.setFill(SHAPE_COLORS[shapeType]);
+            for (int i = 0; i < currentBlock.length; i++) {
+                for (int j = 0; j < currentBlock[i].length; j++) {
+                    if (currentBlock[i][j] == 1) {
+                        gc.fillRect((blockX + j) * TILE, (blockY + i) * TILE, TILE - 1, TILE - 1);
+                    }
                 }
             }
         }
@@ -255,7 +266,7 @@ public class Tetris extends Application {
         // If the game is over, show "GAME OVER" message
         if (isGameOver) {
             gc.setFill(Color.WHITE);
-            gc.setFont(new javafx.scene.text.Font(30));
+            gc.setFont(new javafx.scene.text.Font("Monospaced Bold", 30));
             gc.fillText("GAME OVER", WIDTH * TILE / 2 - 90, HEIGHT * TILE / 2);
         }
         // If the game is currently paused and not over, show "Game is Paused!"
