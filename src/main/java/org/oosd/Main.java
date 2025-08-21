@@ -53,7 +53,7 @@ public class Main extends Application {
         splashImage.setPreserveRatio(true);
         splashImage.setSmooth(true);
 
-        Label courseCode = new Label("Group 4- 7010ICT");
+        Label courseCode = new Label("Group 4 - 7010ICT");
         Label loadingLabel = new Label("Loading, please wait...");
 
         String boldStyle = "-fx-font-weight: bold; -fx-font-size: 18px; -fx-text-fill: red;";
@@ -88,7 +88,7 @@ public class Main extends Application {
     }
 
     private void showMainScreen() {
-        VBox mainScreen = new VBox(10);
+        VBox mainScreen = new VBox(30);
         mainScreen.setPadding(new Insets(20));
 
         Label label = new Label("Main Screen");
@@ -178,7 +178,7 @@ public class Main extends Application {
     }
 
     private void showConfigScreen() {
-        VBox configScreen = new VBox(10);
+        VBox configScreen = new VBox(30);
         configScreen.setPadding(new Insets(20));
 
         Label label = new Label("Configuration");
