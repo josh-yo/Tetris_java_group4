@@ -160,7 +160,7 @@ public class Tetris extends Application {
     // Randomly choose and spawn a new block at the top of the screen
     private void spawnBlock() {
         if (isGameOver) return;
-        
+
         shapeType = (int) (Math.random() * SHAPES.length);
         currentBlock = SHAPES[shapeType];
         blockX = (WIDTH - currentBlock[0].length) / 2;
@@ -190,12 +190,12 @@ public class Tetris extends Application {
                     }
                 }
             }
-            
+
             // Check if game is over before spawning new block
             if (isGameOver) {
                 return;
             }
-            
+
             eraseRow();
             spawnBlock();
         }
