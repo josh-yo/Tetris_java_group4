@@ -29,10 +29,13 @@ This game was designed and developed by **Group 4** using **Java** and **JavaFX*
 - **Exit**: Exit button with confirmation dialog.  
 
 ### Use Case Diagram
+The following diagram shows the main interactions between the user and the Tetris system.  
 ![Use Case Diagram](https://raw.githubusercontent.com/josh-yo/Tetris_java_group4/refs/heads/main/usecase_diagram.png)
 
 ### Activity Diagram
+The following diagram illustrates the flow of activities **from Start New Game to End Game**.  
 ![Activity Diagram](https://raw.githubusercontent.com/josh-yo/Tetris_java_group4/refs/heads/main/activity_diagram.png)
+
 
 
 ## Notes  
