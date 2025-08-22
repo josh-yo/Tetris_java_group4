@@ -28,6 +28,12 @@ This game was designed and developed by **Group 4** using **Java** and **JavaFX*
 - **High Score Screen**: Displays top scores *(currently a dummy screen, with placeholder data)*.  
 - **Exit**: Exit button with confirmation dialog.  
 
+### Use Case Diagram
+![Use Case Diagram](https://raw.githubusercontent.com/Tetris_java_group4/main/usecase%20diagram.png)
+
+### Activity Diagram
+![Activity Diagram](https://raw.githubusercontent.com/Tetris_java_group4/main/Activity%20Diagram..png)
+
 ## Notes  
 - This project is a **course assignment**.  
 - Configuration and High Scores are **dummy pages**, mainly for UI testing. 
