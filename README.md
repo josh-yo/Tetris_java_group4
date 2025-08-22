@@ -29,10 +29,11 @@ This game was designed and developed by **Group 4** using **Java** and **JavaFX*
 - **Exit**: Exit button with confirmation dialog.  
 
 ### Use Case Diagram
-![Use Case Diagram](https://raw.githubusercontent.com/Tetris_java_group4/main/usecase%20diagram.png)
+![Use Case Diagram](https://raw.githubusercontent.com/josh-yo/Tetris_java_group4/refs/heads/main/usecase_diagram.png)
 
 ### Activity Diagram
-![Activity Diagram](https://raw.githubusercontent.com/Tetris_java_group4/main/Activity%20Diagram..png)
+![Activity Diagram](https://raw.githubusercontent.com/josh-yo/Tetris_java_group4/refs/heads/main/activity_diagram.png)
+
 
 ## Notes  
 - This project is a **course assignment**.  
