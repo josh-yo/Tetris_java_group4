@@ -4,6 +4,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font; // ← added
 import javafx.util.Duration;
 import org.oosd.model.*;
 
@@ -17,10 +18,14 @@ public class GameEngine {
 
     private Timeline timeline;
 
+    // === added: keep a reference so we can redraw immediately on state changes
+    private GraphicsContext gcRef;
+
     public GameEngine(Board board) { this.board = board; }
 
     // === Lifecycle ===
     public void start(GraphicsContext gc) {
+        this.gcRef = gc; // ← added
         spawnNew();
         draw(gc);
 
@@ -37,10 +42,13 @@ public class GameEngine {
         if (timeline != null) timeline.stop();
     }
 
-    public void togglePause() {
+    // Show/hide pause and redraw immediately so the overlay text appears right away.
+    public void togglePause() { // ← kept signature (no gc param)
         isPaused = !isPaused;
-        if (timeline == null) return;
-        if (isPaused) timeline.pause(); else timeline.play();
+        if (timeline != null) {
+            if (isPaused) timeline.pause(); else timeline.play();
+        }
+        if (gcRef != null) draw(gcRef); // ← added: force a redraw to show/hide the pause overlay
     }
 
     // === Player Control API (called by InputController) ===
@@ -67,6 +75,8 @@ public class GameEngine {
         current = factory.createRandom(board.getWidth());
         if (!board.isValidPosition(current.getShape(), current.getX(), current.getY())) {
             isGameOver = true;
+            if (timeline != null) timeline.stop(); // ← added: stop loop on game over
+            if (gcRef != null) draw(gcRef);        // ← added: draw GAME OVER immediately
         }
     }
 
@@ -89,7 +99,7 @@ public class GameEngine {
         spawnNew();
     }
 
-    // === Rendering (simplified: engine draws; can be separated into GameScreen if needed) ===
+    // === Rendering (engine draws; minimal changes only) ===
     public void draw(GraphicsContext gc) {
         int tile = Board.TILE;
         int W = board.getWidth() * tile;
@@ -122,9 +132,20 @@ public class GameEngine {
                     }
                 }
             }
+
+            // === added: paused overlay (exactly like your old Tetris.java)
+            if (isPaused) {
+                gc.setFill(Color.WHITE);
+                gc.setFont(Font.font(26));
+                gc.fillText("Game is Paused!", W / 2.0 - 90, H / 2.0);
+                gc.fillText("Press P to Continue.", W / 2.0 - 100, H / 2.0 + 40);
+            }
+
         } else {
+            // === unchanged: game over overlay
             gc.setFill(Color.WHITE);
-            gc.fillText("GAME OVER", W / 2.0 - 60, H / 2.0);
+            gc.setFont(Font.font("Monospaced Bold", 30));
+            gc.fillText("GAME OVER", W / 2.0 - 90, H / 2.0); // X offset 90 to match your legacy code
         }
     }
 }
