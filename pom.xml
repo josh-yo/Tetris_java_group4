@@ -1,30 +1,44 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.example</groupId>
+
+  <groupId>org.oosd</groupId>
   <artifactId>tetris</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>17</maven.compiler.release>
-    <javafx.version>20</javafx.version> <!-- Or 21 depending on your JDK -->
+    <maven.compiler.release>21</maven.compiler.release>
+    <!-- Keep ALL JavaFX artifacts on the same version as in your stacktrace: -->
+    <javafx.version>21.0.8</javafx.version>
   </properties>
 
   <dependencies>
+    <!-- JavaFX UI -->
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
       <version>${javafx.version}</version>
     </dependency>
+
+    <!-- JavaFX Media (AudioClip / MediaPlayer) -->
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-media</artifactId>
+      <version>${javafx.version}</version>
+    </dependency>
+
+    <!-- JSON -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.10.1</version>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
-      <!-- Compiler plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -34,16 +48,15 @@
         </configuration>
       </plugin>
 
-      <!-- JavaFX Maven Plugin -->
+      <!-- Do NOT tie this plugin to the JavaFX version -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>
         <version>0.0.8</version>
         <configuration>
-          <mainClass>org.oosd.Main</mainClass>
+          <mainClass>org.oosd.view.Main</mainClass>
         </configuration>
       </plugin>
     </plugins>
   </build>
-
 </project>

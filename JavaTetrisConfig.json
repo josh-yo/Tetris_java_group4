@@ -1,0 +1,11 @@
+{
+  "fieldWidth": 5,
+  "fieldHeight": 15,
+  "level": 1,
+  "player1Type": "AI",
+  "player2Type": "HUMAN",
+  "musicOn": false,
+  "soundOn": false,
+  "aiOn": false,
+  "extendOn": true
+}
