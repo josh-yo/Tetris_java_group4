@@ -22,7 +22,6 @@ public class Board {
     public int[][] getField() { return field; }
     public Color[][] getFieldColor() { return fieldColor; }
 
-    /** Check if the shape can be placed at position (x, y) */
     public boolean isValidPosition(int[][] shape, int x, int y) {
         for (int i = 0; i < shape.length; i++) {
             for (int j = 0; j < shape[i].length; j++) {
@@ -36,7 +35,6 @@ public class Board {
         return true;
     }
 
-    /** Fix the current falling block onto the board */
     public void fixShape(int[][] shape, int x, int y, Color color) {
         for (int i = 0; i < shape.length; i++) {
             for (int j = 0; j < shape[i].length; j++) {
@@ -51,14 +49,16 @@ public class Board {
         }
     }
 
-    /** Remove all completed rows and shift above rows down */
-    public void clearFullRows() {
+    /** returns cleared line count */
+    public int clearFullRows() {
+        int cleared = 0;
         for (int r = 0; r < height; r++) {
             boolean full = true;
             for (int c = 0; c < width; c++) {
                 if (field[r][c] == 0) { full = false; break; }
             }
             if (full) {
+                cleared++;
                 for (int rr = r; rr > 0; rr--) {
                     System.arraycopy(field[rr - 1], 0, field[rr], 0, width);
                     System.arraycopy(fieldColor[rr - 1], 0, fieldColor[rr], 0, width);
@@ -67,8 +67,9 @@ public class Board {
                     field[0][c] = 0;
                     fieldColor[0][c] = null;
                 }
-                r--; // re-check the same row after shifting
+                r--;
             }
         }
+        return cleared;
     }
 }

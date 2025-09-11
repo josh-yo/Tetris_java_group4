@@ -20,7 +20,6 @@ public class Tetromino {
 
     public void move(int dx, int dy) { x += dx; y += dy; }
 
-    /** Return a rotated version of the current shape (not applied yet) */
     public int[][] rotatedShape() {
         int rows = shape.length, cols = shape[0].length;
         int[][] rotated = new int[cols][rows];
@@ -30,6 +29,5 @@ public class Tetromino {
         return rotated;
     }
 
-    /** Apply the given rotated shape to this tetromino */
     public void applyRotation(int[][] rotated) { this.shape = rotated; }
 }

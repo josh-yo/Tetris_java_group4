@@ -10,22 +10,31 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
-    <javafx.version>21.0.2</javafx.version>
+    <!-- Keep ALL JavaFX artifacts on the same version as in your stacktrace: -->
+    <javafx.version>21.0.8</javafx.version>
   </properties>
 
   <dependencies>
+    <!-- JavaFX UI -->
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
       <version>${javafx.version}</version>
     </dependency>
-    <!-- (선택) 그래픽스 명시하고 싶으면 아래 추가
+
+    <!-- JavaFX Media (AudioClip / MediaPlayer) -->
     <dependency>
       <groupId>org.openjfx</groupId>
-      <artifactId>javafx-graphics</artifactId>
+      <artifactId>javafx-media</artifactId>
       <version>${javafx.version}</version>
     </dependency>
-    -->
+
+    <!-- JSON -->
+    <dependency>
+      <groupId>com.google.code.gson</groupId>
+      <artifactId>gson</artifactId>
+      <version>2.10.1</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -39,7 +48,7 @@
         </configuration>
       </plugin>
 
-      <!-- 반드시 0.0.8! (여기 21.x로 두면 실패합니다) -->
+      <!-- Do NOT tie this plugin to the JavaFX version -->
       <plugin>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-maven-plugin</artifactId>

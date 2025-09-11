@@ -3,9 +3,18 @@ package org.oosd.model;
 import java.util.Random;
 
 public class PieceFactory {
-    private final Random random = new Random();
+    private final Random random;
 
-    /** Create a new tetromino centered horizontally based on the board width */
+    /** Uses a new random seed (single-player or legacy use). */
+    public PieceFactory() {
+        this(new Random());
+    }
+
+    /** Inject a specific Random to control the sequence/seed. */
+    public PieceFactory(Random random) {
+        this.random = random;
+    }
+
     public Tetromino createRandom(int boardWidth) {
         TetrominoKind kind = TetrominoKind.values()[random.nextInt(TetrominoKind.values().length)];
         int[][] shape = copy(kind.baseShape());

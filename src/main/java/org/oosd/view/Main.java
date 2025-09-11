@@ -12,6 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.oosd.service.ConfigService;
 
 import java.net.URL;
 
@@ -19,6 +20,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        ConfigService.getInstance().load();
         // ScreenManager sets up the Stage and initial Scene.
         ScreenManager sm = new ScreenManager(primaryStage);
 
