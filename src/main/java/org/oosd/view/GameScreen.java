@@ -45,6 +45,13 @@ public class GameScreen implements ConfigObserver {
     private GameEngine engine;
     private Board      board;
     private Label statusLabel;
+    // stats sidebar labels
+    private Label lblPlayerType;
+    private Label lblInitialLevel;
+    private Label lblCurrentLevel;
+    private Label lblLines;
+    private Label lblScore;
+    private Canvas nextPreview;
 
 
     // with other fields
@@ -202,17 +209,109 @@ public class GameScreen implements ConfigObserver {
             input.handle(code, gc);
         });
 
-
         // Wrap the canvas so scaling does not push layout
         playfield = new StackPane(canvas);
         playfield.setPadding(new Insets(0));
-        playfield.setStyle("-fx-background-color: transparent;");
+        playfield.setStyle("-fx-background-color: #eeeeee; -fx-border-color: #708993; -fx-border-width: 2;");
 
         // Clip to prevent any visual overflow drawing over the top bar or outside the white window
         clipRect = new Rectangle(1, 1);
         playfield.setClip(clipRect);
 
-        gamePane.setCenter(playfield);
+        // Build stats sidebar to mimic screenshot
+        VBox sidebar = new VBox(10);
+        sidebar.setPadding(new Insets(12));
+        sidebar.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: white;");
+
+        Label title = new Label("Game Info (Player 1)");
+        title.setStyle("-fx-font-weight: bold;");
+
+        lblPlayerType  = new Label("Player Type: " + cfg.getPlayer1Type().name().charAt(0) + cfg.getPlayer1Type().name().substring(1).toLowerCase());
+        lblInitialLevel= new Label("Initial Level: " + cfg.getLevel());
+        lblCurrentLevel= new Label("Current Level: " + ConfigService.getInstance().get().getLevel());
+        lblLines       = new Label("Line Erased: 0");
+        lblScore       = new Label("Score: 0");
+        lblScore.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        VBox info = new VBox(6, title,
+                new Label(""),
+                lblPlayerType,
+                new Label(""),
+                lblInitialLevel,
+                lblCurrentLevel,
+                lblLines,
+                new Label(""),
+                lblScore,
+                new Label(""),
+                new Label("Next Tetromino:")
+        );
+
+        // Next tetromino preview canvas
+        nextPreview = new Canvas(90, 70);
+        StackPane nextPane = new StackPane(nextPreview);
+        nextPane.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: #f7f7f7;");
+        nextPane.setPadding(new Insets(6));
+
+        sidebar.getChildren().addAll(info, nextPane);
+
+        // thin divider between info panel and playfield, like the screenshot
+        Region divider = new Region();
+        divider.setPrefWidth(6);
+        divider.setMinWidth(6);
+        divider.setMaxWidth(6);
+        divider.setStyle("-fx-background-color: #c0c0c0;");
+        divider.setMaxHeight(Double.MAX_VALUE); // stretch vertically to touch frame edges
+
+        HBox mainArea = new HBox(10, sidebar, divider, playfield);
+        mainArea.setPadding(Insets.EMPTY); // let outer 'framed' padding be the only inner spacing
+        mainArea.setFillHeight(true);
+
+        VBox framed = new VBox(mainArea);
+        framed.setPadding(new Insets(20));
+        framed.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: transparent;");
+
+        // Center the whole game panel with padding
+        StackPane centerWrap = new StackPane(framed);
+        centerWrap.setPadding(new Insets(16));
+        StackPane.setAlignment(framed, Pos.CENTER);
+        gamePane.setCenter(centerWrap);
+
+        // periodic UI refresh for stats
+        javafx.animation.Timeline stats = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
+                    lblLines.setText("Line Erased: " + engine.getLinesCleared());
+                    lblScore.setText("Score: " + engine.getScore());
+                    lblCurrentLevel.setText("Current Level: " + ConfigService.getInstance().get().getLevel());
+                    drawNextPreview();
+                })
+        );
+        stats.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        stats.play();
+    }
+
+    private void drawNextPreview() {
+        if (nextPreview == null) return;
+        var gc = nextPreview.getGraphicsContext2D();
+        gc.clearRect(0,0,nextPreview.getWidth(), nextPreview.getHeight());
+        int[][] s = engine.snapshotNextShape();
+        if (s == null) return;
+        int rows = s.length;
+        int cols = s[0].length;
+        double pad = 6;
+        double cell = Math.min((nextPreview.getWidth() - 2*pad) / cols,
+                               (nextPreview.getHeight()- 2*pad) / rows);
+        double totalW = cols * cell;
+        double totalH = rows * cell;
+        double ox = (nextPreview.getWidth()  - totalW) / 2.0;
+        double oy = (nextPreview.getHeight() - totalH) / 2.0;
+        gc.setFill(engine.nextColor());
+        for (int i=0;i<rows;i++) {
+            for (int j=0;j<cols;j++) {
+                if (s[i][j]==1) {
+                    gc.fillRect(ox + j*cell, oy + i*cell, cell-1, cell-1);
+                }
+            }
+        }
     }
 
     // ---------- Fit the canvas inside available area (scale + clip) ----------
@@ -248,13 +347,15 @@ public class GameScreen implements ConfigObserver {
         canvas.setScaleX(scale);
         canvas.setScaleY(scale);
 
-        // Size the center container to the available space and CLIP to keep drawing strictly inside
-        playfield.setMinSize(availW, availH);
-        playfield.setPrefSize(availW, availH);
-        playfield.setMaxSize(availW, availH);
+        // Fix the playfield container to the scaled canvas size to avoid stretching
+        double scaledW = logicalW * scale;
+        double scaledH = logicalH * scale;
+        playfield.setMinSize(scaledW, scaledH);
+        playfield.setPrefSize(scaledW, scaledH);
+        playfield.setMaxSize(scaledW, scaledH);
 
-        clipRect.setWidth(availW);
-        clipRect.setHeight(availH);
+        clipRect.setWidth(scaledW);
+        clipRect.setHeight(scaledH);
 
         // Keep keyboard focus
         canvas.requestFocus();

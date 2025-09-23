@@ -49,6 +49,14 @@ public class TwoPlayerScreen implements ConfigObserver {
     private Board      board1,  board2;
     private Label statusLabel;
 
+    // stats labels per player
+    private Label p1TypeLbl, p2TypeLbl;
+    private Label p1InitLvlLbl, p2InitLvlLbl;
+    private Label p1CurrLvlLbl, p2CurrLvlLbl;
+    private Label p1LinesLbl,   p2LinesLbl;
+    private Label p1ScoreLbl,   p2ScoreLbl;
+    private Canvas p1NextPreview, p2NextPreview;
+
 
     private final MusicPlayer bg = new MusicPlayer();
 
@@ -218,16 +226,116 @@ public class TwoPlayerScreen implements ConfigObserver {
         rightPane = new StackPane(canvas2);
         leftPane.setPadding(new Insets(0));
         rightPane.setPadding(new Insets(0));
-        leftPane.setStyle("-fx-background-color: transparent;");
-        rightPane.setStyle("-fx-background-color: transparent;");
+        leftPane.setStyle("-fx-background-color: #eeeeee; -fx-border-color: #708993; -fx-border-width: 2;");
+        rightPane.setStyle("-fx-background-color: #eeeeee; -fx-border-color: #708993; -fx-border-width: 2;");
 
         leftClip  = new Rectangle(1, 1);
         rightClip = new Rectangle(1, 1);
         leftPane.setClip(leftClip);
         rightPane.setClip(rightClip);
 
-        HBox center = new HBox(8, leftPane, rightPane);
-        root.setCenter(center);
+        // Build per-player sidebars (match single player look)
+        VBox p1Sidebar = new VBox(6);
+        p1Sidebar.setPadding(new Insets(8));
+        p1Sidebar.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: white;");
+
+        Label p1Title = new Label("Game Info (Player 1)");
+        p1Title.setStyle("-fx-font-weight: bold;");
+        p1TypeLbl     = new Label("Player Type: " + cfg.getPlayer1Type());
+        p1InitLvlLbl  = new Label("Initial Level: " + cfg.getLevel());
+        p1CurrLvlLbl  = new Label("Current Level: " + cfg.getLevel());
+        p1LinesLbl    = new Label("Line Erased: 0");
+        p1ScoreLbl    = new Label("Score: 0"); p1ScoreLbl.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        VBox p1Info = new VBox(6, p1Title, new Label(""), p1TypeLbl, new Label(""), p1InitLvlLbl,
+                p1CurrLvlLbl, p1LinesLbl, new Label(""), p1ScoreLbl, new Label(""), new Label("Next Tetromino:"));
+        p1NextPreview = new Canvas(90, 70);
+        StackPane p1NextPane = new StackPane(p1NextPreview);
+        p1NextPane.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: #f7f7f7;");
+        p1NextPane.setPadding(new Insets(6));
+        p1Sidebar.getChildren().addAll(p1Info, p1NextPane);
+
+        VBox p2Sidebar = new VBox(6);
+        p2Sidebar.setPadding(new Insets(8));
+        p2Sidebar.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: white;");
+        Label p2Title = new Label("Game Info (Player 2)");
+        p2Title.setStyle("-fx-font-weight: bold;");
+        p2TypeLbl     = new Label("Player Type: " + cfg.getPlayer2Type());
+        p2InitLvlLbl  = new Label("Initial Level: " + cfg.getLevel());
+        p2CurrLvlLbl  = new Label("Current Level: " + cfg.getLevel());
+        p2LinesLbl    = new Label("Line Erased: 0");
+        p2ScoreLbl    = new Label("Score: 0"); p2ScoreLbl.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        VBox p2Info = new VBox(6, p2Title, new Label(""), p2TypeLbl, new Label(""), p2InitLvlLbl,
+                p2CurrLvlLbl, p2LinesLbl, new Label(""), p2ScoreLbl, new Label(""), new Label("Next Tetromino:"));
+        p2NextPreview = new Canvas(90, 70);
+        StackPane p2NextPane = new StackPane(p2NextPreview);
+        p2NextPane.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: #f7f7f7;");
+        p2NextPane.setPadding(new Insets(6));
+        p2Sidebar.getChildren().addAll(p2Info, p2NextPane);
+
+        // thin grey divider between info panel and playfield (both players)
+        Region div1 = new Region(); div1.setPrefWidth(6); div1.setMinWidth(6); div1.setMaxWidth(6); div1.setStyle("-fx-background-color: #c0c0c0;");
+        Region div2 = new Region(); div2.setPrefWidth(6); div2.setMinWidth(6); div2.setMaxWidth(6); div2.setStyle("-fx-background-color: #c0c0c0;");
+
+        // Player panels: [sidebar | divider | playfield]
+        HBox p1Panel = new HBox(10, p1Sidebar, div1, leftPane); p1Panel.setPadding(new Insets(8));
+        HBox p2Panel = new HBox(10, p2Sidebar, div2, rightPane); p2Panel.setPadding(new Insets(8));
+
+        VBox p1Frame = new VBox(p1Panel); p1Frame.setPadding(new Insets(12)); p1Frame.setStyle("-fx-border-color: #708993; -fx-border-width: 2;");
+        VBox p2Frame = new VBox(p2Panel); p2Frame.setPadding(new Insets(12)); p2Frame.setStyle("-fx-border-color: #708993; -fx-border-width: 2;");
+
+        HBox center = new HBox(24, p1Frame, p2Frame);
+        center.setAlignment(Pos.CENTER);
+
+        // Center all content in a wrapper with padding
+        StackPane centerWrap = new StackPane(center);
+        centerWrap.setPadding(new Insets(12));
+        StackPane.setAlignment(center, Pos.CENTER);
+        root.setCenter(centerWrap);
+
+        // Stats refresh timer
+        javafx.animation.Timeline stats = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
+                    p1LinesLbl.setText("Line Erased: " + engine1.getLinesCleared());
+                    p2LinesLbl.setText("Line Erased: " + engine2.getLinesCleared());
+                    p1ScoreLbl.setText("Score: " + engine1.getScore());
+                    p2ScoreLbl.setText("Score: " + engine2.getScore());
+                    p1CurrLvlLbl.setText("Current Level: " + ConfigService.getInstance().get().getLevel());
+                    p2CurrLvlLbl.setText("Current Level: " + ConfigService.getInstance().get().getLevel());
+                    drawNextPreviews();
+                })
+        );
+        stats.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        stats.play();
+    }
+
+    private void drawNextPreviews() {
+        drawPreview(p1NextPreview, engine1.snapshotNextShape(), engine1.nextColor());
+        drawPreview(p2NextPreview, engine2.snapshotNextShape(), engine2.nextColor());
+    }
+
+    private void drawPreview(Canvas canvas, int[][] shape, javafx.scene.paint.Color color) {
+        if (canvas == null || shape == null) return;
+        var gc = canvas.getGraphicsContext2D();
+        gc.clearRect(0,0,canvas.getWidth(), canvas.getHeight());
+        int rows = shape.length;
+        int cols = shape[0].length;
+        double pad = 6;
+        double cell = Math.min((canvas.getWidth() - 2*pad) / cols,
+                               (canvas.getHeight()- 2*pad) / rows);
+        double totalW = cols * cell;
+        double totalH = rows * cell;
+        double ox = (canvas.getWidth()  - totalW) / 2.0;
+        double oy = (canvas.getHeight() - totalH) / 2.0;
+        gc.setFill(color);
+        for (int i=0;i<rows;i++) {
+            for (int j=0;j<cols;j++) {
+                if (shape[i][j]==1) {
+                    gc.fillRect(ox + j*cell, oy + i*cell, cell-1, cell-1);
+                }
+            }
+        }
     }
 
     private void startEngines() {
@@ -264,7 +372,7 @@ public class TwoPlayerScreen implements ConfigObserver {
         double availW = Math.max(1, sceneW - padL - padR);
         double availH = Math.max(1, sceneH - topH - padT - padB);
 
-        double sideSpacing = 8;
+        double sideSpacing = 6;
         double eachW = Math.max(1, (availW - sideSpacing) / 2.0);
 
         double logicalW = board1.getWidth()  * Board.TILE;
@@ -276,16 +384,19 @@ public class TwoPlayerScreen implements ConfigObserver {
         canvas1.setScaleX(scale); canvas1.setScaleY(scale);
         canvas2.setScaleX(scale); canvas2.setScaleY(scale);
 
-        leftPane .setMinSize(eachW, availH);
-        leftPane .setPrefSize(eachW, availH);
-        leftPane .setMaxSize(eachW, availH);
+        double scaledW = logicalW * scale;
+        double scaledH = logicalH * scale;
 
-        rightPane.setMinSize(eachW, availH);
-        rightPane.setPrefSize(eachW, availH);
-        rightPane.setMaxSize(eachW, availH);
+        leftPane .setMinSize(scaledW, scaledH);
+        leftPane .setPrefSize(scaledW, scaledH);
+        leftPane .setMaxSize(scaledW, scaledH);
 
-        leftClip .setWidth(eachW);  leftClip .setHeight(availH);
-        rightClip.setWidth(eachW);  rightClip.setHeight(availH);
+        rightPane.setMinSize(scaledW, scaledH);
+        rightPane.setPrefSize(scaledW, scaledH);
+        rightPane.setMaxSize(scaledW, scaledH);
+
+        leftClip .setWidth(scaledW);  leftClip .setHeight(scaledH);
+        rightClip.setWidth(scaledW);  rightClip.setHeight(scaledH);
     }
 
     // ---------------- Human key mapping ----------------

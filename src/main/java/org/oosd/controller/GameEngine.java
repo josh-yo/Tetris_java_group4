@@ -14,6 +14,7 @@ public class GameEngine {
     private final PieceFactory factory;
 
     private Tetromino current;
+    private Tetromino next;     // buffered next piece for preview
     private boolean isGameOver = false;
     private boolean isPaused   = false;
 
@@ -67,6 +68,8 @@ public class GameEngine {
         isGameOver = false;
         justLocked = false;
 
+        // prime the next piece and spawn current
+        if (next == null) next = factory.createRandom(board.getWidth());
         spawnNew();
         draw(gc);
 
@@ -129,7 +132,13 @@ public class GameEngine {
     // Internals
     // ----------------------------------------------------
     private void spawnNew() {
-        current = factory.createRandom(board.getWidth());
+        // move buffered 'next' into current, then prepare the following 'next'
+        if (next != null) {
+            current = next;
+        } else {
+            current = factory.createRandom(board.getWidth());
+        }
+        next = factory.createRandom(board.getWidth());
         justLocked = false; // new piece spawns -> reset
         if (!board.isValidPosition(current.getShape(), current.getX(), current.getY())) {
             isGameOver = true;
@@ -237,6 +246,20 @@ public class GameEngine {
         int[][] copy = new int[s.length][];
         for (int i = 0; i < s.length; i++) copy[i] = s[i].clone();
         return copy;
+    }
+
+    /** Returns a deep copy of the next tetromino shape for UI preview (may be null early). */
+    public int[][] snapshotNextShape() {
+        if (next == null) return null;
+        int[][] s = next.getShape();
+        int[][] copy = new int[s.length][];
+        for (int i = 0; i < s.length; i++) copy[i] = s[i].clone();
+        return copy;
+    }
+
+    /** Color of the next tetromino (or gray if unknown). */
+    public Color nextColor() {
+        return (next != null ? next.getKind().color() : Color.GRAY);
     }
 
     /** Current piece position (top-left of the shape in board coords). */

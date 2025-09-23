@@ -1,3 +1,139 @@
 {
-  "scores": []
+  "scores": [
+    {
+      "name": "antony",
+      "score": 4500,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": false,
+        "soundOn": false,
+        "aiOn": false,
+        "extendOn": false
+      }
+    },
+    {
+      "name": "Player 1",
+      "score": 0,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": false,
+        "soundOn": false,
+        "aiOn": false,
+        "extendOn": true
+      }
+    },
+    {
+      "name": "Player 2",
+      "score": 0,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": false,
+        "soundOn": false,
+        "aiOn": false,
+        "extendOn": true
+      }
+    },
+    {
+      "name": "Antony",
+      "score": 1100,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": true,
+        "soundOn": true,
+        "aiOn": false,
+        "extendOn": false
+      }
+    },
+    {
+      "name": "Player 1",
+      "score": 0,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "AI",
+        "musicOn": true,
+        "soundOn": true,
+        "aiOn": false,
+        "extendOn": true
+      }
+    },
+    {
+      "name": "Player",
+      "score": 1100,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": true,
+        "soundOn": true,
+        "aiOn": false,
+        "extendOn": false
+      }
+    },
+    {
+      "name": "Player",
+      "score": 0,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": false,
+        "soundOn": false,
+        "aiOn": false,
+        "extendOn": false
+      }
+    },
+    {
+      "name": "Player",
+      "score": 0,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": false,
+        "soundOn": false,
+        "aiOn": false,
+        "extendOn": false
+      }
+    },
+    {
+      "name": "Player",
+      "score": 0,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": false,
+        "soundOn": false,
+        "aiOn": false,
+        "extendOn": false
+      }
+    }
+  ]
 }
