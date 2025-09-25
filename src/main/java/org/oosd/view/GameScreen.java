@@ -30,21 +30,19 @@ import org.oosd.service.ScoreService;
 import org.oosd.ai.AiDriver;
 import org.oosd.model.PlayerType;
 
-
-
-
 import java.util.List;
 
 public class GameScreen implements ConfigObserver {
     private final ScreenManager sm;
 
     private BorderPane gamePane;
-    private StackPane  playfield;       // wraps the canvas
-    private Rectangle  clipRect;        // clips any overflow
+    private StackPane  playfield;
+    private Rectangle  clipRect;
     private Canvas     canvas;
     private GameEngine engine;
     private Board      board;
     private Label statusLabel;
+
     // stats sidebar labels
     private Label lblPlayerType;
     private Label lblInitialLevel;
@@ -53,14 +51,9 @@ public class GameScreen implements ConfigObserver {
     private Label lblScore;
     private Canvas nextPreview;
 
-
-    // with other fields
     private org.oosd.ai.AiDriver bot;
 
-
     private final MusicPlayer bg = new MusicPlayer();
-
-    // prevent double dialog / double save
     private boolean gameOverHandled = false;
 
     public GameScreen(ScreenManager sm) { this.sm = sm; }
@@ -87,6 +80,7 @@ public class GameScreen implements ConfigObserver {
         }
         refreshStatusLabel();
     }
+
     private void refreshStatusLabel() {
         if (statusLabel == null) return;
         boolean mus = ConfigService.getInstance().get().isMusicOn();
@@ -95,35 +89,40 @@ public class GameScreen implements ConfigObserver {
     }
 
     public void show() {
-        gameOverHandled = false; // new game, reset flag
+        gameOverHandled = false;
 
         Config cfg = ConfigService.getInstance().get();
 
         gamePane = new BorderPane();
         gamePane.setPadding(new Insets(10));
 
-        // ---- Top bar (always visible) ----
+        // ---- Top bar (Back + Music/Sound status) ----
         Button backButton = new Button("Back");
         backButton.setFocusTraversable(false);
-        HBox topBar = new HBox(backButton);
-        topBar.setAlignment(Pos.CENTER_LEFT);
 
         statusLabel = new Label();
         statusLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+        statusLabel.setMinWidth(250); // ensure full text fits
+
+        HBox topBar = new HBox(20, backButton, statusLabel);
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setPadding(new Insets(5, 10, 5, 10));
 
         VBox topBox = new VBox(
-                new HBox(){ { setAlignment(Pos.CENTER); getChildren().add(new Label("Play")); } },
-                new HBox(){ { setAlignment(Pos.CENTER); getChildren().add(statusLabel); } },
+                new HBox() {{
+                    setAlignment(Pos.CENTER);
+                    getChildren().add(new Label("Play"));
+                }},
                 topBar
         );
-        topBox.setSpacing(2);
+        topBox.setSpacing(5);
         gamePane.setTop(topBox);
-        refreshStatusLabel(); // <— s
 
-        // Build the game area
+        refreshStatusLabel();
+
+        // Build game area
         buildGame(cfg);
 
-        // Background music
         if (cfg.isMusicOn()) bg.start("/audio/background.mp3", true);
 
         // Back confirmation
@@ -151,31 +150,25 @@ public class GameScreen implements ConfigObserver {
 
         sm.getRoot().getChildren().setAll(gamePane);
 
-        // Ensure first fit after layout
         Platform.runLater(this::fitCanvas);
 
-        // React to window size changes
         sm.getScene().widthProperty().addListener((o, ov, nv) -> fitCanvas());
         sm.getScene().heightProperty().addListener((o, ov, nv) -> fitCanvas());
 
-        // React when the top bar height changes (first layout pass, DPI changes, etc.)
         if (gamePane.getTop() != null) {
             gamePane.getTop().layoutBoundsProperty().addListener((o, ov, nv) -> fitCanvas());
         }
 
         ConfigService.getInstance().addObserver(this);
 
-        // === GAME OVER HANDLER ===
         engine.setOnGameOver(() -> {
-            if (gameOverHandled) return;   // guard
+            if (gameOverHandled) return;
             gameOverHandled = true;
-
             bg.stop();
             Platform.runLater(this::handleGameOverFlow);
         });
     }
 
-    // ---------- Build/rebuild board & canvas ----------
     private void buildGame(Config cfg) {
         board  = new Board(cfg.getFieldWidth(), cfg.getFieldHeight());
         canvas = new Canvas(board.getWidth() * Board.TILE, board.getHeight() * Board.TILE);
@@ -183,9 +176,9 @@ public class GameScreen implements ConfigObserver {
 
         engine = new GameEngine(board);
         engine.setLevel(cfg.getLevel());
-        // Start AI for Player 1 if needed
+
         if (cfg.getPlayer1Type() == PlayerType.AI) {
-            bot = new org.oosd.ai.AiDriver(engine, gc);
+            bot = new AiDriver(engine, gc);
             bot.start();
             engine.setOnGameOver(() -> { bg.stop(); bot.stop(); });
         } else {
@@ -209,16 +202,13 @@ public class GameScreen implements ConfigObserver {
             input.handle(code, gc);
         });
 
-        // Wrap the canvas so scaling does not push layout
         playfield = new StackPane(canvas);
         playfield.setPadding(new Insets(0));
         playfield.setStyle("-fx-background-color: #eeeeee; -fx-border-color: #708993; -fx-border-width: 2;");
 
-        // Clip to prevent any visual overflow drawing over the top bar or outside the white window
         clipRect = new Rectangle(1, 1);
         playfield.setClip(clipRect);
 
-        // Build stats sidebar to mimic screenshot
         VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(12));
         sidebar.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: white;");
@@ -246,7 +236,6 @@ public class GameScreen implements ConfigObserver {
                 new Label("Next Tetromino:")
         );
 
-        // Next tetromino preview canvas
         nextPreview = new Canvas(90, 70);
         StackPane nextPane = new StackPane(nextPreview);
         nextPane.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: #f7f7f7;");
@@ -254,29 +243,26 @@ public class GameScreen implements ConfigObserver {
 
         sidebar.getChildren().addAll(info, nextPane);
 
-        // thin divider between info panel and playfield, like the screenshot
         Region divider = new Region();
         divider.setPrefWidth(6);
         divider.setMinWidth(6);
         divider.setMaxWidth(6);
         divider.setStyle("-fx-background-color: #c0c0c0;");
-        divider.setMaxHeight(Double.MAX_VALUE); // stretch vertically to touch frame edges
+        divider.setMaxHeight(Double.MAX_VALUE);
 
         HBox mainArea = new HBox(10, sidebar, divider, playfield);
-        mainArea.setPadding(Insets.EMPTY); // let outer 'framed' padding be the only inner spacing
+        mainArea.setPadding(Insets.EMPTY);
         mainArea.setFillHeight(true);
 
         VBox framed = new VBox(mainArea);
         framed.setPadding(new Insets(20));
         framed.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: transparent;");
 
-        // Center the whole game panel with padding
         StackPane centerWrap = new StackPane(framed);
         centerWrap.setPadding(new Insets(16));
         StackPane.setAlignment(framed, Pos.CENTER);
         gamePane.setCenter(centerWrap);
 
-        // periodic UI refresh for stats
         javafx.animation.Timeline stats = new javafx.animation.Timeline(
                 new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
                     lblLines.setText("Line Erased: " + engine.getLinesCleared());
@@ -299,7 +285,7 @@ public class GameScreen implements ConfigObserver {
         int cols = s[0].length;
         double pad = 6;
         double cell = Math.min((nextPreview.getWidth() - 2*pad) / cols,
-                               (nextPreview.getHeight()- 2*pad) / rows);
+                (nextPreview.getHeight()- 2*pad) / rows);
         double totalW = cols * cell;
         double totalH = rows * cell;
         double ox = (nextPreview.getWidth()  - totalW) / 2.0;
@@ -314,15 +300,12 @@ public class GameScreen implements ConfigObserver {
         }
     }
 
-    // ---------- Fit the canvas inside available area (scale + clip) ----------
     private void fitCanvas() {
         if (playfield == null || canvas == null || gamePane == null || board == null) return;
 
-        // Intrinsic (logical) size of the playfield
         double logicalW = board.getWidth()  * Board.TILE;
         double logicalH = board.getHeight() * Board.TILE;
 
-        // Scene size and BorderPane paddings
         double padL = gamePane.getPadding() != null ? gamePane.getPadding().getLeft()   : 0;
         double padR = gamePane.getPadding() != null ? gamePane.getPadding().getRight()  : 0;
         double padT = gamePane.getPadding() != null ? gamePane.getPadding().getTop()    : 0;
@@ -331,23 +314,18 @@ public class GameScreen implements ConfigObserver {
         double sceneW = sm.getScene().getWidth();
         double sceneH = sm.getScene().getHeight();
 
-        // Height occupied by the top region (Back bar)
         double topH = 0;
         if (gamePane.getTop() instanceof Region r) topH = r.getHeight();
 
-        // Available area for the playfield inside the window
         double availW = Math.max(1, sceneW - padL - padR);
         double availH = Math.max(1, sceneH - topH - padT - padB);
 
-        // Uniform scale so the whole playfield fits inside available area
         double scale = Math.min(availW / (logicalW), availH / (logicalH));
-        // Optional: do not upscale beyond 1.0 (remove cap if you want zoom-up on tiny boards)
         scale = Math.min(1.0, scale);
 
         canvas.setScaleX(scale);
         canvas.setScaleY(scale);
 
-        // Fix the playfield container to the scaled canvas size to avoid stretching
         double scaledW = logicalW * scale;
         double scaledH = logicalH * scale;
         playfield.setMinSize(scaledW, scaledH);
@@ -357,14 +335,9 @@ public class GameScreen implements ConfigObserver {
         clipRect.setWidth(scaledW);
         clipRect.setHeight(scaledH);
 
-        // Keep keyboard focus
         canvas.requestFocus();
     }
 
-    // ---------- Game Over Flow ----------
-    // 1) Always prompt for name.
-    // 2) If score qualifies for Top 10 -> save; else ignore.
-    // 3) Go back to Main Menu (no auto High Scores navigation).
     private void handleGameOverFlow() {
         int score = engine.getScore();
 
@@ -389,12 +362,11 @@ public class GameScreen implements ConfigObserver {
 
     private boolean qualifiesTop10(int candidateScore) {
         List<ScoreEntry> top = ScoreService.getInstance().topN(10);
-        if (top.size() < 10) return true;                  // room available
-        int lastScore = top.get(top.size() - 1).getScore(); // sorted desc in ScoreService
+        if (top.size() < 10) return true;
+        int lastScore = top.get(top.size() - 1).getScore();
         return candidateScore > lastScore;
     }
 
-    // Clone config so later changes don't mutate stored snapshot
     private Config cloneConfig(Config c) {
         Config copy = new Config();
         copy.setFieldWidth(c.getFieldWidth());

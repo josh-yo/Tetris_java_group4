@@ -20,6 +20,7 @@ public final class ConfigService {
         }
         return instance;
     }
+    private ConfigService(){}
 
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final Path configFile = Paths.get("JavaTetrisConfig.json");
@@ -27,7 +28,7 @@ public final class ConfigService {
 
     private final List<ConfigObserver> observers = new ArrayList<>();
 
-    private ConfigService(){}
+
 
     public synchronized Config get(){ return config; }
 

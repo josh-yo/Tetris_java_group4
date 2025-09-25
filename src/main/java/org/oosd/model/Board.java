@@ -49,6 +49,12 @@ public class Board {
         }
     }
 
+    public void copyFrom(int[][] src) {
+        for (int r = 0; r < height; r++) {
+            System.arraycopy(src[r], 0, field[r], 0, width);
+        }
+    }
+
     /** returns cleared line count */
     public int clearFullRows() {
         int cleared = 0;

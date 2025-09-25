@@ -18,7 +18,7 @@ public class TetrisAI {
         int[][] s = copy2(shape);
         for (int r = 0; r < 4; r++) {
             int rw = s[0].length;
-            for (int x = -2; x <= W - rw + 1; x++) { // try a few out-of-bounds to allow wall kicks lite
+            for (int x = -2; x <= W - rw + 1; x++) {
                 int dropY = dropRow(field, s, x, startY);
                 if (dropY == Integer.MIN_VALUE) continue;
 

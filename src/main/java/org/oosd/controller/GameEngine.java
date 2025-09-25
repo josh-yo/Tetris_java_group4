@@ -14,7 +14,6 @@ public class GameEngine {
     private final PieceFactory factory;
 
     private Tetromino current;
-    private Tetromino next;     // buffered next piece for preview
     private boolean isGameOver = false;
     private boolean isPaused   = false;
 
@@ -25,12 +24,13 @@ public class GameEngine {
 
     private int fallMs = 500;
 
-    // scoring / lines
+
     private int score = 0;
     private int linesClearedTotal = 0;
 
-    // lets AI know when a piece has just locked (clears on read)
+    // --- AI helpers ---
     private boolean justLocked = false;
+    private long pieceId = 0;
 
     /** Legacy: creates its own PieceFactory (random seed). */
     public GameEngine(Board board) {
@@ -39,13 +39,10 @@ public class GameEngine {
 
     /** Preferred: inject a PieceFactory (so we can control seed/sequence). */
     public GameEngine(Board board, PieceFactory factory) {
-        this.board   = board;
+        this.board = board;
         this.factory = factory;
     }
 
-    // ----------------------------------------------------
-    // Config
-    // ----------------------------------------------------
     public void setLevel(int level) {
         // simple linear mapping (1..10) -> (800..120) ms
         fallMs = Math.max(120, 900 - level * 80);
@@ -57,38 +54,23 @@ public class GameEngine {
 
     public void setOnGameOver(Runnable r){ this.onGameOver = r; }
 
-    public int getScore()            { return score; }
-    public int getLinesCleared()     { return linesClearedTotal; }
+    public int getScore() { return score; }
+    public int getLinesCleared() { return linesClearedTotal; }
 
-    // ----------------------------------------------------
-    // Lifecycle
-    // ----------------------------------------------------
+    // ===== lifecycle =====
     public void start(GraphicsContext gc) {
         this.gcRef = gc;
-        isGameOver = false;
-        justLocked = false;
-
-        // prime the next piece and spawn current
-        if (next == null) next = factory.createRandom(board.getWidth());
         spawnNew();
         draw(gc);
 
         timeline = new Timeline(new KeyFrame(Duration.millis(fallMs), e -> {
-            if (!isGameOver && !isPaused) {
-                // auto soft drop; AI/human calls softDrop() too
-                softDrop(gcRef);
-            }
+            if (!isGameOver && !isPaused) softDrop(gcRef);  // automatic gravity
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
     }
 
-    public void stop() {
-        if (timeline != null) {
-            timeline.stop();
-            timeline = null;
-        }
-    }
+    public void stop() { if (timeline != null) timeline.stop(); }
 
     public void togglePause() {
         isPaused = !isPaused;
@@ -98,13 +80,11 @@ public class GameEngine {
         if (gcRef != null) draw(gcRef);
     }
 
-    // ----------------------------------------------------
-    // Player actions
-    // ----------------------------------------------------
+    // ===== player actions =====
     public void moveLeft(GraphicsContext gc)  { tryMove(-1, 0); draw(gc); }
     public void moveRight(GraphicsContext gc) { tryMove( 1, 0); draw(gc); }
 
-    /** Soft drop by user or gravity. Returns true if actually moved down. */
+    /** soft drop by user (returns true if actually moved) */
     public boolean softDrop(GraphicsContext gc)  {
         boolean moved = tryMove(0, 1);
         if (!moved) lockAndProceed();
@@ -128,21 +108,13 @@ public class GameEngine {
         draw(gc);
     }
 
-    // ----------------------------------------------------
-    // Internals
-    // ----------------------------------------------------
+    // ===== internals =====
     private void spawnNew() {
-        // move buffered 'next' into current, then prepare the following 'next'
-        if (next != null) {
-            current = next;
-        } else {
-            current = factory.createRandom(board.getWidth());
-        }
-        next = factory.createRandom(board.getWidth());
-        justLocked = false; // new piece spawns -> reset
+        current = factory.createRandom(board.getWidth());
+        pieceId++;                 // new identity for AI replanning
         if (!board.isValidPosition(current.getShape(), current.getX(), current.getY())) {
             isGameOver = true;
-            stop();
+            if (timeline != null) timeline.stop();
             if (gcRef != null) draw(gcRef);
             Effect.GAME_FINISH.play();
             if (onGameOver != null) onGameOver.run();
@@ -160,8 +132,7 @@ public class GameEngine {
     }
 
     private void lockAndProceed() {
-        // mark that the current piece has just locked (AI watches this)
-        justLocked = true;
+        justLocked = true; // let AI know
 
         board.fixShape(current.getShape(), current.getX(), current.getY(), current.getKind().color());
         int cleared = board.clearFullRows();
@@ -178,9 +149,7 @@ public class GameEngine {
         spawnNew();
     }
 
-    // ----------------------------------------------------
-    // Rendering
-    // ----------------------------------------------------
+    // ===== rendering =====
     public void draw(GraphicsContext gc) {
         int tile = Board.TILE;
         int W = board.getWidth() * tile;
@@ -225,12 +194,21 @@ public class GameEngine {
         }
     }
 
-    // ----------------------------------------------------
-    // AI helpers & simple getters
-    // ----------------------------------------------------
+    // ==== AI & UI snapshots ====
+
     public boolean isGameOver() { return isGameOver; }
 
-    /** Returns a deep copy of the board occupancy (0/1). */
+    /** one-tick flag telling AI the previous piece just locked */
+    public boolean pieceJustLocked() {
+        boolean was = justLocked;
+        justLocked = false;
+        return was;
+    }
+
+    public long snapshotPieceId() { return pieceId; }
+
+    public TetrominoKind snapshotKind() { return current.getKind(); }
+
     public int[][] snapshotField() {
         int h = board.getHeight();
         int w = board.getWidth();
@@ -240,7 +218,6 @@ public class GameEngine {
         return copy;
     }
 
-    /** Returns a deep copy of the current tetromino shape matrix. */
     public int[][] snapshotShape() {
         int[][] s = current.getShape();
         int[][] copy = new int[s.length][];
@@ -248,8 +225,15 @@ public class GameEngine {
         return copy;
     }
 
-    /** Returns a deep copy of the next tetromino shape for UI preview (may be null early). */
+    public int snapshotX() { return current.getX(); }
+    public int snapshotY() { return current.getY(); }
+
+    public int boardWidth()  { return board.getWidth(); }
+    public int boardHeight() { return board.getHeight(); }
+
+    // --- next-piece preview for GameScreen ---
     public int[][] snapshotNextShape() {
+        Tetromino next = factory.peekNext();
         if (next == null) return null;
         int[][] s = next.getShape();
         int[][] copy = new int[s.length][];
@@ -257,22 +241,8 @@ public class GameEngine {
         return copy;
     }
 
-    /** Color of the next tetromino (or gray if unknown). */
     public Color nextColor() {
-        return (next != null ? next.getKind().color() : Color.GRAY);
+        Tetromino next = factory.peekNext();
+        return (next != null) ? next.getKind().color() : Color.GRAY;
     }
-
-    /** Current piece position (top-left of the shape in board coords). */
-    public int snapshotX() { return current.getX(); }
-    public int snapshotY() { return current.getY(); }
-
-    /** True if a piece locked this frame; clears the flag on read. */
-    public boolean pieceJustLocked() {
-        boolean v = justLocked;
-        justLocked = false;
-        return v;
-    }
-
-    public int boardWidth()  { return board.getWidth(); }
-    public int boardHeight() { return board.getHeight(); }
 }

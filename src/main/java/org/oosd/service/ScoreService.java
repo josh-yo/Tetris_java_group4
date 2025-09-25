@@ -34,7 +34,6 @@ public final class ScoreService {
         save();
     }
 
-    // Streams + Comparator (rubric point)
     public synchronized List<ScoreEntry> topN(int n) {
         return board.getScores().stream()
                 .sorted(Comparator.comparingInt(ScoreEntry::getScore).reversed())

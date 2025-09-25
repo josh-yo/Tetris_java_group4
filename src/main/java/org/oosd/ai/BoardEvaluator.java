@@ -6,7 +6,7 @@ public class BoardEvaluator {
         int holes = holes(board);
         int lines = fullLines(board);
         int bump  = bumpiness(board);
-        // weights inspired by the handout
+
         return (-4 * h) + (3 * lines) - (5 * holes) - (2 * bump);
     }
 
