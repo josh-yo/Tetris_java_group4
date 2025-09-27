@@ -1,9 +1,9 @@
 {
   "fieldWidth": 5,
   "fieldHeight": 15,
-  "level": 10,
+  "level": 1,
   "player1Type": "HUMAN",
-  "player2Type": "AI",
+  "player2Type": "HUMAN",
   "musicOn": true,
   "soundOn": true,
   "aiOn": false,

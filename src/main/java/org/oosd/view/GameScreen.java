@@ -36,13 +36,12 @@ public class GameScreen implements ConfigObserver {
     private final ScreenManager sm;
 
     private BorderPane gamePane;
-    private StackPane  playfield;
-    private Rectangle  clipRect;
+    private StackPane  playfield;       // wraps the canvas
+    private Rectangle  clipRect;        // clips any overflow
     private Canvas     canvas;
     private GameEngine engine;
     private Board      board;
     private Label statusLabel;
-
     // stats sidebar labels
     private Label lblPlayerType;
     private Label lblInitialLevel;
@@ -51,9 +50,12 @@ public class GameScreen implements ConfigObserver {
     private Label lblScore;
     private Canvas nextPreview;
 
+    // with other fields
     private org.oosd.ai.AiDriver bot;
 
     private final MusicPlayer bg = new MusicPlayer();
+
+    // prevent double dialog / double save
     private boolean gameOverHandled = false;
 
     public GameScreen(ScreenManager sm) { this.sm = sm; }
@@ -80,7 +82,6 @@ public class GameScreen implements ConfigObserver {
         }
         refreshStatusLabel();
     }
-
     private void refreshStatusLabel() {
         if (statusLabel == null) return;
         boolean mus = ConfigService.getInstance().get().isMusicOn();
@@ -89,40 +90,35 @@ public class GameScreen implements ConfigObserver {
     }
 
     public void show() {
-        gameOverHandled = false;
+        gameOverHandled = false; // new game, reset flag
 
         Config cfg = ConfigService.getInstance().get();
 
         gamePane = new BorderPane();
         gamePane.setPadding(new Insets(10));
 
-        // ---- Top bar (Back + Music/Sound status) ----
+        // ---- Top bar (always visible) ----
         Button backButton = new Button("Back");
         backButton.setFocusTraversable(false);
+        HBox topBar = new HBox(backButton);
+        topBar.setAlignment(Pos.CENTER_LEFT);
 
         statusLabel = new Label();
         statusLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-        statusLabel.setMinWidth(250); // ensure full text fits
-
-        HBox topBar = new HBox(20, backButton, statusLabel);
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(5, 10, 5, 10));
 
         VBox topBox = new VBox(
-                new HBox() {{
-                    setAlignment(Pos.CENTER);
-                    getChildren().add(new Label("Play"));
-                }},
+                new HBox(){ { setAlignment(Pos.CENTER); getChildren().add(new Label("Play")); } },
+                new HBox(){ { setAlignment(Pos.CENTER); getChildren().add(statusLabel); } },
                 topBar
         );
-        topBox.setSpacing(5);
+        topBox.setSpacing(2);
         gamePane.setTop(topBox);
-
         refreshStatusLabel();
 
-        // Build game area
+        // Build the game area
         buildGame(cfg);
 
+        // Background music
         if (cfg.isMusicOn()) bg.start("/audio/background.mp3", true);
 
         // Back confirmation
@@ -150,25 +146,31 @@ public class GameScreen implements ConfigObserver {
 
         sm.getRoot().getChildren().setAll(gamePane);
 
+        // Ensure first fit after layout
         Platform.runLater(this::fitCanvas);
 
+        // React to window size changes
         sm.getScene().widthProperty().addListener((o, ov, nv) -> fitCanvas());
         sm.getScene().heightProperty().addListener((o, ov, nv) -> fitCanvas());
 
+        // React when the top bar height changes
         if (gamePane.getTop() != null) {
             gamePane.getTop().layoutBoundsProperty().addListener((o, ov, nv) -> fitCanvas());
         }
 
         ConfigService.getInstance().addObserver(this);
 
+        // === GAME OVER HANDLER ===
         engine.setOnGameOver(() -> {
             if (gameOverHandled) return;
             gameOverHandled = true;
+
             bg.stop();
             Platform.runLater(this::handleGameOverFlow);
         });
     }
 
+    // ---------- Build/rebuild board & canvas ----------
     private void buildGame(Config cfg) {
         board  = new Board(cfg.getFieldWidth(), cfg.getFieldHeight());
         canvas = new Canvas(board.getWidth() * Board.TILE, board.getHeight() * Board.TILE);
@@ -202,13 +204,15 @@ public class GameScreen implements ConfigObserver {
             input.handle(code, gc);
         });
 
+        // Wrap the canvas so scaling does not push layout
         playfield = new StackPane(canvas);
         playfield.setPadding(new Insets(0));
-        playfield.setStyle("-fx-background-color: #eeeeee; -fx-border-color: #708993; -fx-border-width: 2;");
+        playfield.setStyle("-fx-background-color: #000000; -fx-border-color: #708993; -fx-border-width: 2;");
 
         clipRect = new Rectangle(1, 1);
         playfield.setClip(clipRect);
 
+        // Sidebar
         VBox sidebar = new VBox(10);
         sidebar.setPadding(new Insets(12));
         sidebar.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: white;");
@@ -216,7 +220,7 @@ public class GameScreen implements ConfigObserver {
         Label title = new Label("Game Info (Player 1)");
         title.setStyle("-fx-font-weight: bold;");
 
-        lblPlayerType  = new Label("Player Type: " + cfg.getPlayer1Type().name().charAt(0) + cfg.getPlayer1Type().name().substring(1).toLowerCase());
+        lblPlayerType  = new Label("Player Type: " + cfg.getPlayer1Type().name());
         lblInitialLevel= new Label("Initial Level: " + cfg.getLevel());
         lblCurrentLevel= new Label("Current Level: " + ConfigService.getInstance().get().getLevel());
         lblLines       = new Label("Line Erased: 0");
@@ -236,6 +240,7 @@ public class GameScreen implements ConfigObserver {
                 new Label("Next Tetromino:")
         );
 
+        // Next tetromino preview
         nextPreview = new Canvas(90, 70);
         StackPane nextPane = new StackPane(nextPreview);
         nextPane.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: #f7f7f7;");
@@ -243,6 +248,7 @@ public class GameScreen implements ConfigObserver {
 
         sidebar.getChildren().addAll(info, nextPane);
 
+        // Divider
         Region divider = new Region();
         divider.setPrefWidth(6);
         divider.setMinWidth(6);
@@ -250,9 +256,28 @@ public class GameScreen implements ConfigObserver {
         divider.setStyle("-fx-background-color: #c0c0c0;");
         divider.setMaxHeight(Double.MAX_VALUE);
 
-        HBox mainArea = new HBox(10, sidebar, divider, playfield);
-        mainArea.setPadding(Insets.EMPTY);
-        mainArea.setFillHeight(true);
+        // Main area
+        HBox mainArea;
+
+// If player 2 exists and is not HUMAN, treat as 2-player mode
+        if (cfg.getPlayer2Type() != null && cfg.getPlayer2Type() != PlayerType.HUMAN) {
+            // 2-player mode → normal layout
+            mainArea = new HBox(10, sidebar, divider, playfield, new Label("P2 board TBD"));
+            mainArea.setAlignment(Pos.CENTER_LEFT);
+        } else {
+            // 1-player mode → CENTER sidebar + playfield
+            HBox inner = new HBox(10, sidebar, divider, playfield);
+            inner.setAlignment(Pos.CENTER);
+            inner.setMaxWidth(Region.USE_PREF_SIZE);
+
+            StackPane centered = new StackPane(inner);
+            centered.setAlignment(Pos.CENTER);
+
+            mainArea = new HBox(centered);
+            mainArea.setAlignment(Pos.CENTER);
+        }
+
+
 
         VBox framed = new VBox(mainArea);
         framed.setPadding(new Insets(20));
@@ -263,6 +288,7 @@ public class GameScreen implements ConfigObserver {
         StackPane.setAlignment(framed, Pos.CENTER);
         gamePane.setCenter(centerWrap);
 
+        // periodic UI refresh
         javafx.animation.Timeline stats = new javafx.animation.Timeline(
                 new javafx.animation.KeyFrame(javafx.util.Duration.millis(200), e -> {
                     lblLines.setText("Line Erased: " + engine.getLinesCleared());
@@ -379,3 +405,4 @@ public class GameScreen implements ConfigObserver {
         return copy;
     }
 }
+

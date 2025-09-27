@@ -1,8 +1,5 @@
 package org.oosd.model;
 
-import org.oosd.model.PlayerType;
-
-
 public class Config {
     private int fieldWidth  = 10;  // 5..15
     private int fieldHeight = 20;  // 15..30
@@ -43,4 +40,15 @@ public class Config {
     public PlayerType getPlayer2Type() { return player2Type; }
     public void setPlayer2Type(PlayerType t) { this.player2Type = (t == null ? PlayerType.HUMAN : t); }
 
+    // === NEW METHODS ===
+
+    /** Returns true if we are in single player mode. */
+    public boolean isSinglePlayerMode() {
+        return player2Type == null || player2Type == PlayerType.HUMAN && player1Type != PlayerType.HUMAN;
+    }
+
+    /** Returns true if we are in two player mode. */
+    public boolean isTwoPlayerMode() {
+        return player2Type != null && player2Type != PlayerType.HUMAN;
+    }
 }
