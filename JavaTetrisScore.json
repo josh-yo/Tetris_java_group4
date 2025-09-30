@@ -149,6 +149,66 @@
         "aiOn": false,
         "extendOn": false
       }
+    },
+    {
+      "name": "p2score",
+      "score": 200,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": true,
+        "soundOn": true,
+        "aiOn": false,
+        "extendOn": true
+      }
+    },
+    {
+      "name": "p2new",
+      "score": 400,
+      "configSnapshot": {
+        "fieldWidth": 10,
+        "fieldHeight": 21,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": true,
+        "soundOn": true,
+        "aiOn": false,
+        "extendOn": true
+      }
+    },
+    {
+      "name": "p2test",
+      "score": 200,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": true,
+        "soundOn": true,
+        "aiOn": false,
+        "extendOn": true
+      }
+    },
+    {
+      "name": "p1test",
+      "score": 200,
+      "configSnapshot": {
+        "fieldWidth": 5,
+        "fieldHeight": 15,
+        "level": 1,
+        "player1Type": "HUMAN",
+        "player2Type": "HUMAN",
+        "musicOn": true,
+        "soundOn": true,
+        "aiOn": false,
+        "extendOn": true
+      }
     }
   ]
 }

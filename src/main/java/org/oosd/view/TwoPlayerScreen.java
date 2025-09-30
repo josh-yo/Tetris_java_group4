@@ -34,6 +34,9 @@ import javafx.geometry.Pos;
 import javafx.scene.input.KeyCode;
 import java.util.List;
 import java.util.Random;
+import org.oosd.model.ScoreEntry;
+import javafx.stage.Screen;
+import javafx.geometry.Rectangle2D;
 
 
 
@@ -221,6 +224,7 @@ public class TwoPlayerScreen implements ConfigObserver {
             }
         });
 
+
         // Panes + clipping so nothing overflows
         leftPane  = new StackPane(canvas1);
         rightPane = new StackPane(canvas2);
@@ -241,6 +245,7 @@ public class TwoPlayerScreen implements ConfigObserver {
 
         Label p1Title = new Label("Game Info (Player 1)");
         p1Title.setStyle("-fx-font-weight: bold;");
+        p1Title.setMinWidth(Region.USE_PREF_SIZE);
         p1TypeLbl     = new Label("Player Type: " + cfg.getPlayer1Type());
         p1InitLvlLbl  = new Label("Initial Level: " + cfg.getLevel());
         p1CurrLvlLbl  = new Label("Current Level: " + cfg.getLevel());
@@ -260,6 +265,7 @@ public class TwoPlayerScreen implements ConfigObserver {
         p2Sidebar.setStyle("-fx-border-color: #708993; -fx-border-width: 2; -fx-background-color: white;");
         Label p2Title = new Label("Game Info (Player 2)");
         p2Title.setStyle("-fx-font-weight: bold;");
+        p2Title.setMinWidth(Region.USE_PREF_SIZE);
         p2TypeLbl     = new Label("Player Type: " + cfg.getPlayer2Type());
         p2InitLvlLbl  = new Label("Initial Level: " + cfg.getLevel());
         p2CurrLvlLbl  = new Label("Current Level: " + cfg.getLevel());
@@ -323,7 +329,7 @@ public class TwoPlayerScreen implements ConfigObserver {
         int cols = shape[0].length;
         double pad = 6;
         double cell = Math.min((canvas.getWidth() - 2*pad) / cols,
-                               (canvas.getHeight()- 2*pad) / rows);
+                (canvas.getHeight()- 2*pad) / rows);
         double totalW = cols * cell;
         double totalH = rows * cell;
         double ox = (canvas.getWidth()  - totalW) / 2.0;
@@ -355,6 +361,8 @@ public class TwoPlayerScreen implements ConfigObserver {
 
 
     // ---------------- Fit both canvases side-by-side ----------------
+    // ---------------- Fit both canvases side-by-side ----------------
+
     private void fitBoth() {
         if (root == null || leftPane == null || rightPane == null) return;
 
@@ -397,7 +405,24 @@ public class TwoPlayerScreen implements ConfigObserver {
 
         leftClip .setWidth(scaledW);  leftClip .setHeight(scaledH);
         rightClip.setWidth(scaledW);  rightClip.setHeight(scaledH);
+
+        // ✅ Dynamically resize Stage but keep within screen bounds
+        Platform.runLater(() -> {
+            Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
+
+            double newWidth  = (scaledW * 2) + 500; // playfields + sidebars
+            double newHeight = scaledH + 200;       // playfields + top UI
+
+            // Bound to max screen size
+            newWidth  = Math.min(newWidth,  screenBounds.getWidth()  - 50);
+            newHeight = Math.min(newHeight, screenBounds.getHeight() - 50);
+
+            sm.getStage().setWidth(newWidth);
+            sm.getStage().setHeight(newHeight);
+        });
     }
+
+
 
     // ---------------- Human key mapping ----------------
     private void handleKeys(KeyEvent e) {
@@ -449,22 +474,6 @@ public class TwoPlayerScreen implements ConfigObserver {
         }
     }
 
-    // ---------------- Game Over & High Score per player ----------------
-    private void promptIfTopScore(int playerIdx, int score) {
-        if (!qualifiesTop10(score)) return;
-
-        TextInputDialog d = new TextInputDialog();
-        d.setTitle("High Score");
-        d.setHeaderText("Player " + playerIdx + " made the Top Scores!\nEnter name:");
-        d.setContentText("Name:");
-        d.showAndWait().ifPresent(name -> {
-            String finalName = (name == null || name.isBlank()) ? "Player " + playerIdx : name.trim();
-            Config snapshot = cloneConfig(ConfigService.getInstance().get());
-            ScoreService.getInstance().addScore(finalName, score, snapshot);
-        });
-        if (playerIdx == 1) p1Prompted = true; else p2Prompted = true;
-    }
-
     private boolean qualifiesTop10(int candidateScore) {
         List<ScoreEntry> top = ScoreService.getInstance().topN(10);
         if (top.size() < 10) return true;
@@ -472,12 +481,50 @@ public class TwoPlayerScreen implements ConfigObserver {
         return candidateScore > lastScore;
     }
 
+    // ---------------- Game Over & High Score per player ----------------
+    private void promptIfTopScore(int playerIdx, int score) {
+        if (!qualifiesTop10(score)) {
+            if (playerIdx == 1) {
+                p1Prompted = true;
+            } else {
+                p2Prompted = true;
+            }
+            return;
+        }
+
+        // Pause both games while dialog is open
+        stopEngines();
+
+        Platform.runLater(() -> {
+            TextInputDialog d = new TextInputDialog();
+            d.setTitle("High Score");
+            d.setHeaderText("Player " + playerIdx + " made the Top Scores!\nEnter name:");
+            d.setContentText("Name:");
+
+            d.showAndWait().ifPresent(name -> {
+                String finalName = (name == null || name.isBlank()) ? "Player " + playerIdx : name.trim();
+                Config snapshot = cloneConfig(ConfigService.getInstance().get());
+                ScoreService.getInstance().addScore(finalName, score, snapshot);
+            });
+
+            if (playerIdx == 1) {
+                p1Prompted = true;
+            } else {
+                p2Prompted = true;
+            }
+
+            // Resume other player if still alive
+            if (!p1Over) engine1.start(canvas1.getGraphicsContext2D());
+            if (!p2Over) engine2.start(canvas2.getGraphicsContext2D());
+        });
+    }
     private void maybeFinish() {
         if (p1Over && p2Over) {
             teardown();
             sm.showMainMenu();
         }
     }
+
 
     // Clone config so later changes don't mutate stored snapshot
     private Config cloneConfig(Config c) {
