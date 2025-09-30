@@ -1,5 +1,5 @@
 {
-  "fieldWidth": 13,
+  "fieldWidth": 15,
   "fieldHeight": 30,
   "level": 1,
   "player1Type": "HUMAN",
@@ -7,5 +7,5 @@
   "musicOn": true,
   "soundOn": true,
   "aiOn": false,
-  "extendOn": true
+  "extendOn": false
 }
