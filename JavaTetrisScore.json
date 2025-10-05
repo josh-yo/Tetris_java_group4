@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "scores": [
     {
       "name": "Player1",
@@ -212,7 +211,4 @@
       }
     }
   ]
-=======
-  "scores": []
->>>>>>> 617983c (Add the Testing unit)
 }

@@ -1,13 +1,7 @@
 {
-<<<<<<< HEAD
   "fieldWidth": 15,
   "fieldHeight": 30,
   "level": 1,
-=======
-  "fieldWidth": 10,
-  "fieldHeight": 21,
-  "level": 4,
->>>>>>> 617983c (Add the Testing unit)
   "player1Type": "HUMAN",
   "player2Type": "HUMAN",
   "musicOn": true,
